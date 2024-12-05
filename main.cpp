@@ -118,11 +118,11 @@ int main()
                 board_second_player_enemy.placeShip(new_ship);
                 board_first_player_ally.placeShip(new_ship);
                 //ships.push_back(new_ship); // Добавляем корабль в список
-                board_first_player_ally.display();
+                board_first_player_ally.display(false, board_first_player_ally);
             }
             else
             {
-                board_first_player_ally.display();
+                board_first_player_ally.display(false, board_first_player_ally);
                 cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
                 j--; // Повторим попытку размещения для этого корабля
             }
@@ -160,11 +160,11 @@ int main()
                 board_first_player_enemy.placeShip(new_ship);
                 board_second_player_ally.placeShip(new_ship);
                 //ships.push_back(new_ship); // Добавляем корабль в список
-                board_second_player_ally.display();
+                board_second_player_ally.display(false, board_second_player_ally);
             }
             else
             {
-                board_second_player_ally.display();
+                board_second_player_ally.display(false, board_second_player_ally);
                 cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
                 j--; // Повторим попытку размещения для этого корабля
             }
@@ -172,30 +172,74 @@ int main()
     }
 
     // Выстрелы
-    board_first_player_ally.processShot(3, 3); // Промах
-    board_first_player_ally.display();
-    board_second_player_enemy.processShot(3, 3);
-    board_second_player_enemy.display();
-    board_first_player_ally.processShot(6, 7); // Промах
-    board_first_player_ally.display();
-    board_second_player_enemy.processShot(6, 7);
-    board_second_player_enemy.display();
-    board_first_player_ally.processShot(1, 1); // Попадание (1/2)
-    board_first_player_ally.display();
-    board_second_player_enemy.processShot(1, 1);
-    board_second_player_enemy.display();
-    board_first_player_ally.processShot(1, 2); // Попадание (2/2)
-    board_first_player_ally.display();
-    board_second_player_enemy.processShot(1, 2);
-    board_second_player_enemy.display();
-    board_first_player_ally.processShot(3, 4); // Попадание (2/3)
-    board_first_player_ally.display();
-    board_second_player_enemy.processShot(3, 4);
-    board_second_player_enemy.display();
-    board_first_player_ally.processShot(3, 5); // Попадание (3/3)
-    board_first_player_ally.display();     // Отображение после выстрелов
-    board_second_player_enemy.processShot(3, 5);
-    board_second_player_enemy.display();
+    // Ходит Игрок №2
+    while (true)
+    {
+
+        int rezult_first_player = 1;
+        int rezult_second_player = 1;
+
+        // ход 1-го игрока
+        while (rezult_first_player == 1 || rezult_first_player == -1)
+        {
+            // вывод информации полей боя для 1-го игрока
+            cout << "Информация полей боя для 1-го игрока.\n";
+            board_first_player_ally.display(true, board_first_player_enemy);
+
+            int x, y;
+            cout << "Координаты x, y: ";
+            cin >> x >> y;
+
+            rezult_first_player = board_second_player_ally.processShot(x, y);
+            board_first_player_enemy.processShot(x, y);
+
+            if (rezult_first_player == 1)
+            {
+                cout << "Удачное попадание. Ходите ещё раз!\n";
+            }
+            else if (rezult_first_player == -1)
+            {
+                cout << "Вы уже стреляли в эту координату. Ходите заново!\n";
+            }
+            else
+            {
+                board_first_player_ally.display(true, board_first_player_enemy);
+                cout << "Промах. Ход переходи 2-му игроку!\n";
+                system("pause");
+            }
+        }
+
+        // ход 2-го игрока
+        while (rezult_second_player == 1 || rezult_second_player == -1)
+        {
+            // вывод информации полей боя для 2-го игрока
+            cout << "Информация полей боя для 2-го игрока.\n";
+            board_second_player_ally.display(true, board_second_player_enemy);
+
+            int x, y;
+            cout << "Координаты x, y: ";
+            cin >> x >> y;
+
+            rezult_second_player = board_first_player_ally.processShot(x, y);
+            board_second_player_enemy.processShot(x, y);
+
+            if (rezult_second_player == 1)
+            {
+                cout << "Удачное попадание. Ходите ещё раз!\n";
+            }
+            else if (rezult_second_player == -1)
+            {
+                cout << "Вы уже стреляли в эту координату.\n";
+            }
+            else
+            {
+                board_second_player_ally.display(true, board_second_player_enemy);
+                cout << "Промах. Ход переходи 1-му игроку!\n";
+                system("pause");
+            }
+        }
+    }
+
 
     return 1;
 }

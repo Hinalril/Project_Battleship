@@ -16,7 +16,7 @@ void Board::placeShip(const Ship& ship)
 
 
 // ќбработка выстрела
-bool Board::processShot(int x, int y)
+int Board::processShot(int x, int y)
 {
     x--;
     y--;
@@ -36,13 +36,17 @@ bool Board::processShot(int x, int y)
                 break;
             }
         }
-        return true;
+        return 1;
     }
     else if (grid[x][y] == ' ')
     {
         grid[x][y] = 'O'; // ѕромах
+        return 0;
     }
-    return false;
+    else if (grid[x][y] == 'O' || grid[x][y] == 'X')
+    {
+        return -1;
+    }
 }
 
 void Board::placeDeadField(const Ship& ship)
@@ -80,14 +84,23 @@ void Board::placeDeadField(const Ship& ship)
 }
 
 // ќтображение пол€
-void Board::display() const
+void Board::display(bool second_battlefield, const Board& second_board) const
 {
-
     // ѕечать верхней границы таблицы
     cout << "    ";  // ќтступ перед номерами столбцов
     for (int i = 0; i < size; ++i)
     {
-        cout << setw(2) << i+1 << "  ";  // ѕечать номеров столбцов
+        cout << setw(2) << i + 1 << "  ";  // ѕечать номеров столбцов
+    }
+    if (second_battlefield)
+    {
+        cout << "  ";
+        // ѕечать верхней границы таблицы
+        cout << "    ";  // ќтступ перед номерами столбцов
+        for (int i = 0; i < size; ++i)
+        {
+            cout << setw(2) << i + 1 << "  ";  // ѕечать номеров столбцов
+        }
     }
     cout << "\n";
 
@@ -97,19 +110,36 @@ void Board::display() const
     {
         cout << "---+";  // ѕечать горизонтальной линии дл€ каждой €чейки
     }
+    if (second_battlefield)
+    {
+        cout << "  ";
+        // ѕечать горизонтальной линии после заголовков столбцов
+        cout << "   +";
+        for (int i = 0; i < size; ++i)
+        {
+            cout << "---+";  // ѕечать горизонтальной линии дл€ каждой €чейки
+        }
+    }
     cout << "\n";
 
     // ѕечать строк с границами
     for (int i = 0; i < size; ++i)
     {
-            cout << setw(2) << i+1 << " |";  // ѕечать номера строки и вертикальной границы
+        cout << setw(2) << i + 1 << " |";  // ѕечать номера строки и вертикальной границы
 
         // ѕечать содержимого €чеек с вертикальными границами
         for (int j = 0; j < size; ++j)
         {
             if (!hide_ships)
             {
-                cout << " " << grid[j][i] << " |";
+                if (grid[j][i] == 'S')
+                {
+                    cout << " " << "\033[31m" << grid[j][i] << "\033[0m" << " |";
+                }
+                else
+                {
+                    cout << " " << grid[j][i] << " |";
+                }
             }
             else
             {
@@ -123,6 +153,31 @@ void Board::display() const
                 }
             }
         }
+        if (second_battlefield)
+        {
+            cout << "  ";
+            cout << setw(2) << i + 1 << " |";  // ѕечать номера строки и вертикальной границы
+
+            // ѕечать содержимого €чеек с вертикальными границами
+            for (int j = 0; j < size; ++j)
+            {
+                if (!second_board.hide_ships)
+                {
+                    cout << " " << grid[j][i] << " |";
+                }
+                else
+                {
+                    if (second_board.grid[j][i] != 'S')
+                    {
+                        cout << " " << second_board.grid[j][i] << " |";
+                    }
+                    else
+                    {
+                        cout << "  " << " |";
+                    }
+                }
+            }
+        }
 
         // ѕечать завершающей вертикальной границы строки
         cout << "\n";
@@ -133,6 +188,16 @@ void Board::display() const
         {
             cout << "---+";  // ѕечать горизонтальной линии дл€ каждой €чейки
         }
+        if (second_battlefield)
+        {
+            cout << "  ";
+            cout << "   +";
+            for (int j = 0; j < size; ++j)
+            {
+                cout << "---+";  // ѕечать горизонтальной линии дл€ каждой €чейки
+            }
+        }
+
         cout << "\n";
     }
 }
@@ -322,11 +387,3 @@ bool Board::can_place_ship(const Ship& ship)
 
     return true;
 }
-
-
-
-
-// добавить вывод, который будето выводить 2 доски текущего игрока: мои корабли и статус пол€ бо€ соперника
-
-// всего будет 4 доски: игрок 1 (его корабли), игрок 1 (корабли соперника, которые он поразил)
-//                      игрок 2 (его корабли), игрок 2 (корабли соперника, которые он поразил)
