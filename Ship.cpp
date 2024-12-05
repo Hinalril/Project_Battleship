@@ -1,7 +1,6 @@
 
 #include "Ship.h"
 
-
 // Конструктор
 Ship::Ship(string name, int size, pair<int, int> start, bool is_vertical) : name(name), size(size), is_vertical(is_vertical), hits(0)
 {

@@ -2,7 +2,7 @@
 #include "Board.h"
 
 // Определение конструктора
-Board::Board(int size) : size(size), grid(size, vector<char>(size, ' ')) {}
+Board::Board(int size, bool hide_ships) : size(size), grid(size, vector<char>(size, ' ')), hide_ships(hide_ships) {}
 
 // Размещение корабля
 void Board::placeShip(const Ship& ship)
@@ -18,6 +18,8 @@ void Board::placeShip(const Ship& ship)
 // Обработка выстрела
 bool Board::processShot(int x, int y)
 {
+    x--;
+    y--;
     bool found = false;
     if (grid[x][y] == 'S')
     {
@@ -77,33 +79,10 @@ void Board::placeDeadField(const Ship& ship)
     }
 }
 
-
-
-/*
 // Отображение поля
 void Board::display() const
 {
-    cout << "  ";
-    for (int i = 0; i < size; ++i)
-    {
-        cout << i << " ";
-    }
-    cout << "\n";
 
-    for (int i = 0; i < size; ++i)
-    {
-        cout << i << " ";
-        for (int j = 0; j < size; ++j)
-        {
-            cout << grid[j][i] << " ";
-        }
-        cout << "\n";
-    }
-}*/
-
-// Отображение поля
-void Board::display() const
-{
     // Печать верхней границы таблицы
     cout << "    ";  // Отступ перед номерами столбцов
     for (int i = 0; i < size; ++i)
@@ -128,7 +107,21 @@ void Board::display() const
         // Печать содержимого ячеек с вертикальными границами
         for (int j = 0; j < size; ++j)
         {
-            cout << " " << grid[j][i] << " |";
+            if (!hide_ships)
+            {
+                cout << " " << grid[j][i] << " |";
+            }
+            else
+            {
+                if (grid[j][i] != 'S')
+                {
+                    cout << " " << grid[j][i] << " |";
+                }
+                else
+                {
+                    cout << "  " << " |";
+                }
+            }
         }
 
         // Печать завершающей вертикальной границы строки

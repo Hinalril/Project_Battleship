@@ -1,47 +1,10 @@
-﻿/*
-Рекомендации по количеству кораблей в зависимости от размера поля:
-Поле 6x6 (36 клеток)
-1 четырёхпалубный (Battleship).
-1 трёхпалубный (Cruiser).
-2 двухпалубных (Destroyer).
-3 однопалубных (Submarine).
-Итого: 7 кораблей, занимают 20 клеток (≈55% свободного пространства).
-
-Поле 8x8 (64 клетки)
-1 четырёхпалубный (Battleship).
-2 трёхпалубных (Cruiser).
-3 двухпалубных (Destroyer).
-4 однопалубных (Submarine).
-Итого: 10 кораблей, занимают 25 клеток (≈60% свободного пространства).
-
-Поле 10x10 (100 клеток) — классическое поле
-1 четырёхпалубный (Battleship).
-2 трёхпалубных (Cruiser).
-3 двухпалубных (Destroyer).
-4 однопалубных (Submarine).
-Итого: 10 кораблей, занимают 25 клеток (25% клеток — оптимально).
-
-Поле 12x12 (144 клетки)
-2 четырёхпалубных (Battleship).
-3 трёхпалубных (Cruiser).
-4 двухпалубных (Destroyer).
-6 однопалубных (Submarine).
-Итого: 15 кораблей, занимают 40 клеток (≈28% клеток).
-
-Поле 15x15 (225 клеток)
-2 четырёхпалубных (Battleship).
-4 трёхпалубных (Cruiser).
-5 двухпалубных (Destroyer).
-7 однопалубных (Submarine).
-Итого: 18 кораблей, занимают 55 клеток (≈24% клеток).
-*/
-
-
+﻿
 #include <iostream>
 #include <Windows.h>
 #include "Board.h"
 #include "Ship.h"
 
+// ############################### ОТДАТЬ ДАННЫЙ КУСОК КОДА НАСТЕ ############################### НАЧАЛО №1
 struct ShipType
 {
     string name;
@@ -57,6 +20,8 @@ vector<ShipType> calculateShips(int fieldSize)
     // Инициализация кораблей
     vector<ShipType> ships =
     {
+        {"Flagship", 6, 0},    // 6-палубный
+        {"Carrier", 5, 0},     // 5-палубный
         {"Battleship", 4, 0},  // 4-палубный
         {"Cruiser", 3, 0},     // 3-палубный
         {"Destroyer", 2, 0},   // 2-палубный
@@ -91,6 +56,7 @@ vector<ShipType> calculateShips(int fieldSize)
 
     return ships;
 }
+// ############################### ОТДАТЬ ДАННЫЙ КУСОК КОДА НАСТЕ ############################### КОНЕЦ №1
 
 
 int main()
@@ -98,15 +64,21 @@ int main()
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
-    vector<Ship> ships;
+    //vector<Ship> ships;
 
     int fieldSize;
     cout << "Введите размер поля: ";
     cin >> fieldSize;
 
-    Board board(fieldSize);
+    Board board_first_player_ally(fieldSize, false);
+    Board board_first_player_enemy(fieldSize, true);
 
-    // Расчёт кораблей
+    Board board_second_player_ally(fieldSize, false);
+    Board board_second_player_enemy(fieldSize, true);
+
+
+
+    // Расчёт количества кораблей
     vector<ShipType> ships_ = calculateShips(fieldSize);
 
     cout << "Рекомендуемое количество кораблей для поля " << fieldSize << "x" << fieldSize << ":\n";
@@ -115,14 +87,7 @@ int main()
         cout << ship.name << " (размер " << ship.size << "): " << ship.count << "\n";
     }
 
-    /*
-        Четырёхпалубный — Battleship.
-        Трёхпалубный — Cruiser.
-        Двухпалубный — Destroyer.
-        Однопалубный — Submarine.
-    */
-
-    // расположение кораблей
+    // расположение кораблей для игрока №1
     for (int i = 0; i < ships_.size(); i++)
     {
         for (int j = 0; j < ships_[i].count; j++)
@@ -148,36 +113,89 @@ int main()
             pair<int, int> new_data(x, y);
             Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
 
-            if (board.can_place_ship(new_ship))
+            if (board_first_player_ally.can_place_ship(new_ship))
             {
-                board.placeShip(new_ship);
-                ships.push_back(new_ship); // Добавляем корабль в список
+                board_second_player_enemy.placeShip(new_ship);
+                board_first_player_ally.placeShip(new_ship);
+                //ships.push_back(new_ship); // Добавляем корабль в список
+                board_first_player_ally.display();
             }
             else
             {
+                board_first_player_ally.display();
                 cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
                 j--; // Повторим попытку размещения для этого корабля
             }
+        }
+    }
 
-            board.display();
+    // расположение кораблей для игрока №2
+    for (int i = 0; i < ships_.size(); i++)
+    {
+        for (int j = 0; j < ships_[i].count; j++)
+        {
+            int x, y;
+            bool vertical;
+
+            cout << "Расположите " << ships_[i].name << " (размер " << ships_[i].size << "):\n";
+            cout << "Координаты x, y: ";
+            cin >> x >> y;
+            x--;
+            y--;
+            if (ships_[i].name != "Submarine")
+            {
+                cout << "Расположить вертикально? (0/1): ";
+                cin >> vertical;
+            }
+            else
+            {
+                vertical = true;
+            }
+
+            pair<int, int> new_data(x, y);
+            Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
+
+            if (board_second_player_ally.can_place_ship(new_ship))
+            {
+                board_first_player_enemy.placeShip(new_ship);
+                board_second_player_ally.placeShip(new_ship);
+                //ships.push_back(new_ship); // Добавляем корабль в список
+                board_second_player_ally.display();
+            }
+            else
+            {
+                board_second_player_ally.display();
+                cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
+                j--; // Повторим попытку размещения для этого корабля
+            }
         }
     }
 
     // Выстрелы
-    board.processShot(2, 2); // Попадание
-    board.display();
-    board.processShot(5, 6); // Промах
-    board.display();
-    board.processShot(0, 0); // Попадание (1/2)
-    board.display();
-    board.processShot(0, 1); // Попадание (2/2)
-    board.display();
-    board.processShot(2, 3); // Попадание (2/3)
-    board.display();
-    board.processShot(2, 4); // Попадание (3/3)
-
-    // Отображение после выстрелов
-    board.display();
+    board_first_player_ally.processShot(3, 3); // Промах
+    board_first_player_ally.display();
+    board_second_player_enemy.processShot(3, 3);
+    board_second_player_enemy.display();
+    board_first_player_ally.processShot(6, 7); // Промах
+    board_first_player_ally.display();
+    board_second_player_enemy.processShot(6, 7);
+    board_second_player_enemy.display();
+    board_first_player_ally.processShot(1, 1); // Попадание (1/2)
+    board_first_player_ally.display();
+    board_second_player_enemy.processShot(1, 1);
+    board_second_player_enemy.display();
+    board_first_player_ally.processShot(1, 2); // Попадание (2/2)
+    board_first_player_ally.display();
+    board_second_player_enemy.processShot(1, 2);
+    board_second_player_enemy.display();
+    board_first_player_ally.processShot(3, 4); // Попадание (2/3)
+    board_first_player_ally.display();
+    board_second_player_enemy.processShot(3, 4);
+    board_second_player_enemy.display();
+    board_first_player_ally.processShot(3, 5); // Попадание (3/3)
+    board_first_player_ally.display();     // Отображение после выстрелов
+    board_second_player_enemy.processShot(3, 5);
+    board_second_player_enemy.display();
 
     return 1;
 }
