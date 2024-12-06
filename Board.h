@@ -10,12 +10,13 @@ class Board
 {
 private:
 
-    vector<Ship> ships;         // Вектор размещённых кораблей
+
 
 public:
     int size;                   // Размер игрового поля (size x size)
     vector<vector<char>> grid;  // Игровое поле, представленное в виде матрицы символов
     bool hide_ships;
+    vector<Ship> ships;         // Вектор размещённых кораблей
 
     Board(int size, bool hide_ships);               // Конструктор
     void placeShip(const Ship& ship);               // Размещение корабля

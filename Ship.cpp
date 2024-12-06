@@ -33,7 +33,7 @@ bool Ship::takeHit(int x, int y)
     {
         if (coord.first == x && coord.second == y)
         {
-            status_coordinates[counter] = false;
+            status_coordinates[counter] = false; // false - клетка корабля подбита
             ++hits;
             return true;
         }

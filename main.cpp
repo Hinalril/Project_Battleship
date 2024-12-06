@@ -66,6 +66,35 @@ vector<ShipType> calculateShips(int fieldSize, int& remember_ship_sells)
 }
 // ############################### ОТДАТЬ ДАННЫЙ КУСОК КОДА НАСТЕ ############################### КОНЕЦ №1
 
+// вывод живых кораблей
+void output_ships(vector<ShipType> ships, vector<ShipType> ships_player, Board board)
+{
+    int number_board_ships = 0;
+    for (int i = 0; i < ships.size(); i++)
+    {
+        for (int j = 0; j < ships[i].count; j++)
+        {
+            int counter = 0;
+            for (int k = 0; k < board.ships[number_board_ships].size; k++)
+            {
+                if (board.ships[number_board_ships].status_coordinates[k] == false) // false - клетка корабля подбита
+                {
+                    counter++;
+                }
+            }
+            if (counter == board.ships[number_board_ships].size)
+            {
+                ships_player[board.ships[number_board_ships].size - 1].count--;
+            }
+            number_board_ships++;
+        }
+    }
+    cout << "Живых кораблей противника:\n";
+    for (int i = 0; i < ships_player.size(); i++)
+    {
+        cout << ships_player[i].name << ": " << ships_player[i].count << ".\n";
+    }
+}
 
 void SetCursor(int x, int y) //функция для того чтобы устанавливать позицию курсора в консоли по оси Х и Y
 {
@@ -147,6 +176,24 @@ int main()
 
     // Расчёт количества кораблей
     vector<ShipType> ships = calculateShips(fieldSize, remember_ship_sells);
+    vector<ShipType> ships_first_player =
+    {
+        {"Submarine", 1, ships[5].count},  // 1-палубный
+        {"Destroyer", 2, ships[4].count},  // 2-палубный
+        {"Cruiser", 3, ships[3].count},    // 3-палубный
+        {"Battleship", 4, ships[2].count}, // 4-палубный
+        {"Carrier", 5, ships[1].count },   // 5-палубный
+        {"Flagship", 6, ships[0].count}    // 6-палубный
+    };
+    vector<ShipType> ships_second_player =
+    {
+        {"Submarine", 1, ships[5].count},  // 1-палубный
+        {"Destroyer", 2, ships[4].count},  // 2-палубный
+        {"Cruiser", 3, ships[3].count},    // 3-палубный
+        {"Battleship", 4, ships[2].count}, // 4-палубный
+        {"Carrier", 5, ships[1].count },   // 5-палубный
+        {"Flagship", 6, ships[0].count}    // 6-палубный
+    };
 
     cout << "Рекомендуемое количество кораблей для поля " << fieldSize << "x" << fieldSize << ":\n";
     for (const auto& ship : ships)
@@ -174,7 +221,7 @@ int main()
             int key;
             do
             {
-                key = _getch();//функция возвращает номер нажатой клавиши
+                key = _getch(); //функция возвращает номер нажатой клавиши
                 switch (key)
                 {
                 case Left:
@@ -339,6 +386,7 @@ int main()
             system("cls");
             cout << "Информация полей боя для 1-го игрока.\n";
             board_first_player_ally.display(true, board_first_player_enemy);
+            output_ships(ships, ships_first_player, board_second_player_ally);
 
             if (rezult_first_player == 1 && first_shot == false)
             {
@@ -422,6 +470,7 @@ int main()
             system("cls");
             cout << "Информация полей боя для 2-го игрока.\n";
             board_second_player_ally.display(true, board_second_player_enemy);
+            output_ships(ships, ships_second_player, board_first_player_ally);
 
             if (rezult_second_player == 1 && first_shot == false)
             {

@@ -27,7 +27,6 @@ void Board::placeShip(const Ship& ship)
     ships.push_back(ship);
 }
 
-
 // Обработка выстрела
 int Board::processShot(int x, int y)
 {
