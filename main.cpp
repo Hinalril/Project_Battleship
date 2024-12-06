@@ -82,8 +82,62 @@ int main()
     int remember_ship_sells = 0; // количество ячеек, которые занимают корабли
 
     int fieldSize;
-    cout << "Введите размер поля: ";
-    cin >> fieldSize;
+    string input;
+
+    while (true)
+    {
+        cout << "Введите размер поля: ";
+        getline(cin, input); // Считываем строку целиком
+
+        bool isInt = true; // Проверка строки на целое число
+        size_t startIndex = 0;
+
+        if (input.empty())
+        {
+            isInt = false;
+        }
+        else if (input[0] == '-')
+        {
+            if (input.size() == 1)
+            {
+                isInt = false; // "-" не является числом
+            }
+            else
+            {
+                startIndex = 1; // Начинаем проверку с первого символа после "-"
+            }
+        }
+
+        for (int i = startIndex; i < input.size() && isInt; i++)
+        {
+            if (input[i] < '0' || input[i] > '9') // Проверяем, является ли символ цифрой
+            {
+                isInt = false;
+            }
+        }
+
+        if (isInt)
+        {
+            fieldSize = stoi(input); // Преобразуем строку в число
+
+            if (fieldSize >= 3)
+            {
+                break; // Корректное значение введено
+            }
+            else if (fieldSize < 0)
+            {
+                cout << "Размер поля должен быть положительным! Попробуйте снова.\n";
+            }
+            else
+            {
+                cout << "Выбрано слишком малое поле. Введите значение > 2.\n";
+            }
+        }
+        else
+        {
+            cout << "Ошибка ввода! Пожалуйста, введите целое число.\n";
+        }
+    }
 
     Board board_first_player_ally(fieldSize, false);
     Board board_first_player_enemy(fieldSize, true);
@@ -152,7 +206,14 @@ int main()
                     }
                     break;
                 case Tab:
-                    vertical = true;
+                    if (!vertical)
+                    {
+                        vertical = true;
+                    }
+                    else
+                    {
+                        vertical = false;
+                    }
                     break;
                 case Enter:
                     pair<int, int> new_data((remember_x_first_player_placement - 5) / 4, (remember_y_first_player_placement - 3) / 2);
@@ -226,7 +287,14 @@ int main()
                     }
                     break;
                 case Tab:
-                    vertical = true;
+                    if (!vertical)
+                    {
+                        vertical = true;
+                    }
+                    else
+                    {
+                        vertical = false;
+                    }
                     break;
                 case Enter:
                     pair<int, int> new_data((remember_x_second_player_placement - 5) / 4, (remember_y_second_player_placement - 3) / 2);

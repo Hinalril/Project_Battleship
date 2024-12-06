@@ -45,7 +45,7 @@ bool Ship::takeHit(int x, int y)
 int Ship::statusShip() const
 {
     int counter_damage = 0;
-    for (vector<bool>::size_type i = 0; i < (status_coordinates.size()); i++)
+    for (int i = 0; i < (status_coordinates.size()); i++)
     {
         if (status_coordinates[i] == false)
         {
