@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <Windows.h>
 #include "Ship.h"
 
 class Board

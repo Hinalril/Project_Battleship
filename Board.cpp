@@ -1,6 +1,19 @@
 
 #include "Board.h"
 
+HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE); //ƒескриптор активного окна
+
+enum Color { Black = 0, DarkBlue = 1, Green = 2, Blue = 3, Red = 4, Purple = 5, Yellow = 6, White = 7, Grey = 8, LightBlue = 9, LightGreen = 10};
+
+void setColorWithBackground(Color textColor, Color backgroundColor)
+{
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    int color = (backgroundColor << 4) | textColor; // ‘он сдвигаетс€ влево на 4 бита
+    // Ёто делаетс€, потому что в Windows цвета фона занимают старшие 4 бита (4Ц7) байта цвета, а цвета текста занимают младшие 4 бита (0Ц3).
+    // ќператор | (побитовое »Ћ») объедин€ет биты backgroundColor и textColor. Ёто позвол€ет "смешать" два значени€ в одно целое число, не потер€в информации.
+    SetConsoleTextAttribute(hConsole, color);
+}
+
 // ќпределение конструктора
 Board::Board(int size, bool hide_ships) : size(size), grid(size, vector<char>(size, ' ')), hide_ships(hide_ships) {}
 
@@ -134,7 +147,24 @@ void Board::display(bool second_battlefield, const Board& second_board) const
             {
                 if (grid[j][i] == 'S')
                 {
-                    cout << " " << "\033[31m" << grid[j][i] << "\033[0m" << " |";
+                    setColorWithBackground(Red, Red);
+                    cout << " " << grid[j][i] << " ";
+                    setColorWithBackground(White, Black);
+                    cout << "|";
+                }
+                else if (grid[j][i] == 'O')
+                {
+                    setColorWithBackground(Grey, Grey);
+                    cout << " " << grid[j][i] << " ";
+                    setColorWithBackground(White, Black);
+                    cout << "|";
+                }
+                else if (grid[j][i] == 'X')
+                {
+                    setColorWithBackground(Purple, Purple);
+                    cout << " " << grid[j][i] << " ";
+                    setColorWithBackground(White, Black);
+                    cout << "|";
                 }
                 else
                 {
@@ -145,7 +175,24 @@ void Board::display(bool second_battlefield, const Board& second_board) const
             {
                 if (grid[j][i] != 'S')
                 {
-                    cout << " " << grid[j][i] << " |";
+                    if (grid[j][i] == 'O')
+                    {
+                        setColorWithBackground(Grey, Grey);
+                        cout << " " << grid[j][i] << " ";
+                        setColorWithBackground(White, Black);
+                        cout << "|";
+                    }
+                    else if (grid[j][i] == 'X')
+                    {
+                        setColorWithBackground(Purple, Purple);
+                        cout << " " << grid[j][i] << " ";
+                        setColorWithBackground(White, Black);
+                        cout << "|";
+                    }
+                    else
+                    {
+                        cout << " " << grid[j][i] << " |";
+                    }
                 }
                 else
                 {
@@ -163,13 +210,54 @@ void Board::display(bool second_battlefield, const Board& second_board) const
             {
                 if (!second_board.hide_ships)
                 {
-                    cout << " " << grid[j][i] << " |";
+                    if (second_board.grid[j][i] == 'S')
+                    {
+                        setColorWithBackground(Red, Red);
+                        cout << " " << second_board.grid[j][i] << " ";
+                        setColorWithBackground(White, Black);
+                        cout << "|";
+                    }
+                    else if (second_board.grid[j][i] == 'O')
+                    {
+                        setColorWithBackground(Grey, Grey);
+                        cout << " " << second_board.grid[j][i] << " ";
+                        setColorWithBackground(White, Black);
+                        cout << "|";
+                    }
+                    else if (second_board.grid[j][i] == 'X')
+                    {
+                        setColorWithBackground(Purple, Purple);
+                        cout << " " << second_board.grid[j][i] << " ";
+                        setColorWithBackground(White, Black);
+                        cout << "|";
+                    }
+                    else
+                    {
+                        cout << " " << second_board.grid[j][i] << " |";
+                    }
                 }
                 else
                 {
                     if (second_board.grid[j][i] != 'S')
                     {
-                        cout << " " << second_board.grid[j][i] << " |";
+                        if (second_board.grid[j][i] == 'O')
+                        {
+                            setColorWithBackground(Grey, Grey);
+                            cout << " " << second_board.grid[j][i] << " ";
+                            setColorWithBackground(White, Black);
+                            cout << "|";
+                        }
+                        else if (second_board.grid[j][i] == 'X')
+                        {
+                            setColorWithBackground(Purple, Purple);
+                            cout << " " << second_board.grid[j][i] << " ";
+                            setColorWithBackground(White, Black);
+                            cout << "|";
+                        }
+                        else
+                        {
+                            cout << " " << second_board.grid[j][i] << " |";
+                        }
                     }
                     else
                     {
@@ -197,7 +285,6 @@ void Board::display(bool second_battlefield, const Board& second_board) const
                 cout << "---+";  // ѕечать горизонтальной линии дл€ каждой €чейки
             }
         }
-
         cout << "\n";
     }
 }

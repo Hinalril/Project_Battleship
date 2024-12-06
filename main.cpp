@@ -1,8 +1,13 @@
 ﻿
 #include <iostream>
 #include <Windows.h>
+#include <conio.h>
 #include "Board.h"
 #include "Ship.h"
+
+HANDLE hStdOutMain = GetStdHandle(STD_OUTPUT_HANDLE); //Дескриптор активного окна
+
+enum Napravlenie { Up = 72, Left = 75, Right = 77, Down = 80, Enter = 13, Tab = 9 };
 
 // ############################### ОТДАТЬ ДАННЫЙ КУСОК КОДА НАСТЕ ############################### НАЧАЛО №1
 struct ShipType
@@ -12,10 +17,11 @@ struct ShipType
     int count;
 };
 
-vector<ShipType> calculateShips(int fieldSize)
+vector<ShipType> calculateShips(int fieldSize, int& remember_ship_sells)
 {
     int totalCells = fieldSize * fieldSize;        // Общее количество клеток
     int shipCells = static_cast<int>(totalCells * 0.2); // Клетки для кораблей
+    remember_ship_sells = shipCells;
 
     // Инициализация кораблей
     vector<ShipType> ships =
@@ -51,7 +57,9 @@ vector<ShipType> calculateShips(int fieldSize)
 
         // Если ни один корабль не был добавлен, выходим из цикла
         if (!added)
+        {
             break;
+        }
     }
 
     return ships;
@@ -59,12 +67,19 @@ vector<ShipType> calculateShips(int fieldSize)
 // ############################### ОТДАТЬ ДАННЫЙ КУСОК КОДА НАСТЕ ############################### КОНЕЦ №1
 
 
+void SetCursor(int x, int y) //функция для того чтобы устанавливать позицию курсора в консоли по оси Х и Y
+{
+    COORD myCoords = { x,y }; //инициализация координат
+    SetConsoleCursorPosition(hStdOutMain, myCoords); //Способ перемещения курсора на нужные координаты
+}
+
+
 int main()
 {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
-    //vector<Ship> ships;
+    int remember_ship_sells = 0; // количество ячеек, которые занимают корабли
 
     int fieldSize;
     cout << "Введите размер поля: ";
@@ -76,105 +91,355 @@ int main()
     Board board_second_player_ally(fieldSize, false);
     Board board_second_player_enemy(fieldSize, true);
 
-
-
     // Расчёт количества кораблей
-    vector<ShipType> ships_ = calculateShips(fieldSize);
+    vector<ShipType> ships_ = calculateShips(fieldSize, remember_ship_sells);
 
     cout << "Рекомендуемое количество кораблей для поля " << fieldSize << "x" << fieldSize << ":\n";
     for (const auto& ship : ships_)
     {
         cout << ship.name << " (размер " << ship.size << "): " << ship.count << "\n";
     }
+    Sleep(4000);
+
+    int remember_x_first_player_placement = 5;
+    int remember_y_first_player_placement = 3;
 
     // расположение кораблей для игрока №1
     for (int i = 0; i < ships_.size(); i++)
     {
         for (int j = 0; j < ships_[i].count; j++)
         {
-            int x, y;
-            bool vertical;
+            bool vertical = false;
 
+            system("cls");
+            cout << "Игрок 1, расположите свои корабли.\n";
+            board_first_player_ally.display(false, board_first_player_ally);
             cout << "Расположите " << ships_[i].name << " (размер " << ships_[i].size << "):\n";
-            cout << "Координаты x, y: ";
-            cin >> x >> y;
-            x--;
-            y--;
-            if (ships_[i].name != "Submarine")
-            {
-                cout << "Расположить вертикально? (0/1): ";
-                cin >> vertical;
-            }
-            else
-            {
-                vertical = true;
-            }
 
-            pair<int, int> new_data(x, y);
-            Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
-
-            if (board_first_player_ally.can_place_ship(new_ship))
+            SetCursor(remember_x_first_player_placement, remember_y_first_player_placement);
+            int key;
+            do
             {
-                board_second_player_enemy.placeShip(new_ship);
-                board_first_player_ally.placeShip(new_ship);
-                //ships.push_back(new_ship); // Добавляем корабль в список
-                board_first_player_ally.display(false, board_first_player_ally);
-            }
-            else
-            {
-                board_first_player_ally.display(false, board_first_player_ally);
-                cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
-                j--; // Повторим попытку размещения для этого корабля
-            }
+                key = _getch();//функция возвращает номер нажатой клавиши
+                switch (key)
+                {
+                case Left:
+                    if (remember_x_first_player_placement > 5)
+                    {
+                        remember_x_first_player_placement = remember_x_first_player_placement - 4;
+                        SetCursor(remember_x_first_player_placement, remember_y_first_player_placement);
+                    }
+                    break;
+                case Right:
+                    if (remember_x_first_player_placement < 5 + fieldSize * 4 - 4)
+                    {
+                        remember_x_first_player_placement = remember_x_first_player_placement + 4;
+                        SetCursor(remember_x_first_player_placement, remember_y_first_player_placement);
+                    }
+                    break;
+                case Up:
+                    if (remember_y_first_player_placement > 3)
+                    {
+                        remember_y_first_player_placement = remember_y_first_player_placement - 2;
+                        SetCursor(remember_x_first_player_placement, remember_y_first_player_placement);
+                    }
+                    break;
+                case Down:
+                    if (remember_y_first_player_placement < 3 + fieldSize * 2 - 2)
+                    {
+                        remember_y_first_player_placement = remember_y_first_player_placement + 2;
+                        SetCursor(remember_x_first_player_placement, remember_y_first_player_placement);
+                    }
+                    break;
+                case Tab:
+                    vertical = true;
+                    break;
+                case Enter:
+                    pair<int, int> new_data((remember_x_first_player_placement - 5) / 4, (remember_y_first_player_placement - 3) / 2);
+                    Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
+                    if (board_first_player_ally.can_place_ship(new_ship))
+                    {
+                        board_second_player_enemy.placeShip(new_ship);
+                        board_first_player_ally.placeShip(new_ship);
+                    }
+                    else
+                    {
+                        system("cls");
+                        cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
+                        j--; // Повторим попытку размещения для этого корабля
+                    }
+                    break;
+                }
+            } while (key != Enter);
         }
     }
+    Sleep(2000);
+
+    int remember_x_second_player_placement = 5;
+    int remember_y_second_player_placement = 3;
 
     // расположение кораблей для игрока №2
     for (int i = 0; i < ships_.size(); i++)
     {
         for (int j = 0; j < ships_[i].count; j++)
         {
-            int x, y;
-            bool vertical;
+            bool vertical = false;
 
+            system("cls");
+            cout << "Игрок 2, расположите свои корабли.\n";
+            board_second_player_ally.display(false, board_second_player_ally);
             cout << "Расположите " << ships_[i].name << " (размер " << ships_[i].size << "):\n";
-            cout << "Координаты x, y: ";
-            cin >> x >> y;
-            x--;
-            y--;
-            if (ships_[i].name != "Submarine")
+
+            SetCursor(remember_x_second_player_placement, remember_y_second_player_placement);
+            int key;
+            do
             {
-                cout << "Расположить вертикально? (0/1): ";
-                cin >> vertical;
+                key = _getch();//функция возвращает номер нажатой клавиши
+                switch (key)
+                {
+                case Left:
+                    if (remember_x_second_player_placement > 5)
+                    {
+                        remember_x_second_player_placement = remember_x_second_player_placement - 4;
+                        SetCursor(remember_x_second_player_placement, remember_y_second_player_placement);
+                    }
+                    break;
+                case Right:
+                    if (remember_x_second_player_placement < 5 + fieldSize * 4 - 4)
+                    {
+                        remember_x_second_player_placement = remember_x_second_player_placement + 4;
+                        SetCursor(remember_x_second_player_placement, remember_y_second_player_placement);
+                    }
+                    break;
+                case Up:
+                    if (remember_y_second_player_placement > 3)
+                    {
+                        remember_y_second_player_placement = remember_y_second_player_placement - 2;
+                        SetCursor(remember_x_second_player_placement, remember_y_second_player_placement);
+                    }
+                    break;
+                case Down:
+                    if (remember_y_second_player_placement < 3 + fieldSize * 2 - 2)
+                    {
+                        remember_y_second_player_placement = remember_y_second_player_placement + 2;
+                        SetCursor(remember_x_second_player_placement, remember_y_second_player_placement);
+                    }
+                    break;
+                case Tab:
+                    vertical = true;
+                    break;
+                case Enter:
+                    pair<int, int> new_data((remember_x_second_player_placement - 5) / 4, (remember_y_second_player_placement - 3) / 2);
+                    Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
+                    if (board_second_player_ally.can_place_ship(new_ship))
+                    {
+                        board_first_player_enemy.placeShip(new_ship);
+                        board_second_player_ally.placeShip(new_ship);
+                    }
+                    else
+                    {
+                        system("cls");
+                        cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
+                        j--; // Повторим попытку размещения для этого корабля
+                    }
+                    break;
+                }
+            } while (key != Enter);
+        }
+    }
+    Sleep(2000);
+
+   
+    bool win_first_player = false, win_second_player = false;
+    int ship_sells_first_player = remember_ship_sells, ship_sells_second_player = remember_ship_sells;
+
+    int remember_x_first_player = 5 + fieldSize * 4 + 6;
+    int remember_y_first_player = 3;
+
+    int remember_x_second_player = 5 + fieldSize * 4 + 6;
+    int remember_y_second_player = 3;
+
+    while (!win_first_player && !win_second_player)
+    {
+        int rezult_first_player = 1;
+        bool first_shot = true;
+
+        // Выстрелы
+        // Ходит Игрок №2
+        while ((rezult_first_player == 1 || rezult_first_player == -1) && !win_first_player)
+        {
+            system("cls");
+            cout << "Информация полей боя для 1-го игрока.\n";
+            board_first_player_ally.display(true, board_first_player_enemy);
+
+            if (rezult_first_player == 1 && first_shot == false)
+            {
+                cout << "Удачное попадание. Ходите ещё раз!\n";
             }
-            else
+            if (rezult_first_player == -1)
             {
-                vertical = true;
+                cout << "Вы уже стреляли в эту координату. Ходите заново!\n";
             }
 
-            pair<int, int> new_data(x, y);
-            Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
+            SetCursor(remember_x_first_player, remember_y_first_player);
+            int key;
+            do
+            {
+                key = _getch();//функция возвращает номер нажатой клавиши
+                switch (key)
+                {
+                case Left:
+                    if (remember_x_first_player > 5 + fieldSize * 4 + 6)
+                    {
+                        remember_x_first_player = remember_x_first_player - 4;
+                        SetCursor(remember_x_first_player, remember_y_first_player);
+                    }
+                    break;
+                case Right:
+                    if (remember_x_first_player < 5 + fieldSize * 4 + 6 + fieldSize * 4 - 4)
+                    {
+                        remember_x_first_player = remember_x_first_player + 4;
+                        SetCursor(remember_x_first_player, remember_y_first_player);
+                    }
+                    break;
+                case Up:
+                    if (remember_y_first_player > 3)
+                    {
+                        remember_y_first_player = remember_y_first_player - 2;
+                        SetCursor(remember_x_first_player, remember_y_first_player);
+                    }
+                    break;
+                case Down:
+                    if (remember_y_first_player < 3 + fieldSize * 2 - 2)
+                    {
+                        remember_y_first_player = remember_y_first_player + 2;
+                        SetCursor(remember_x_first_player, remember_y_first_player);
+                    }
+                    break;
+                case Enter:
+                    rezult_first_player = board_second_player_ally.processShot(((remember_x_first_player - 5 - 6 - fieldSize * 4) / 4) + 1, ((remember_y_first_player - 3) / 2) + 1);
+                    board_first_player_enemy.processShot(((remember_x_first_player - 5 - 6 - fieldSize * 4) / 4) + 1, ((remember_y_first_player - 3) / 2) + 1);
 
-            if (board_second_player_ally.can_place_ship(new_ship))
+                    if (rezult_first_player == 1)
+                    {
+                        ship_sells_first_player--;
+                        if (ship_sells_first_player == 0)
+                        {
+                            system("cls");
+                            board_first_player_ally.display(true, board_first_player_enemy);
+                            win_first_player = true;
+                            break;
+                        }
+                        first_shot = false; // первый выстрел был сделан
+                    }
+
+                    if (rezult_first_player == 0)
+                    {
+                        system("cls");
+                        cout << "Информация полей боя для 1-го игрока.\n";
+                        board_first_player_ally.display(true, board_first_player_enemy);
+                        cout << "Промах. Ход переходит 2-му игроку!\n";
+                        system("pause");
+                    }
+                    break;
+                }
+            } while (key != Enter);
+        }
+
+        int rezult_second_player = 1;
+        first_shot = true;
+
+        while ((rezult_second_player == 1 || rezult_second_player == -1) && !win_second_player && !win_first_player)
+        {
+            system("cls");
+            cout << "Информация полей боя для 2-го игрока.\n";
+            board_second_player_ally.display(true, board_second_player_enemy);
+
+            if (rezult_second_player == 1 && first_shot == false)
             {
-                board_first_player_enemy.placeShip(new_ship);
-                board_second_player_ally.placeShip(new_ship);
-                //ships.push_back(new_ship); // Добавляем корабль в список
-                board_second_player_ally.display(false, board_second_player_ally);
+                cout << "Удачное попадание. Ходите ещё раз!\n";
             }
-            else
+            if (rezult_second_player == -1)
             {
-                board_second_player_ally.display(false, board_second_player_ally);
-                cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
-                j--; // Повторим попытку размещения для этого корабля
+                cout << "Вы уже стреляли в эту координату. Ходите заново!\n";
             }
+
+            SetCursor(remember_x_second_player, remember_y_second_player);
+            int key;
+            do
+            {
+                key = _getch();//функция возвращает номер нажатой клавиши
+                switch (key)
+                {
+                case Left:
+                    if (remember_x_second_player > 5 + fieldSize * 4 + 6)
+                    {
+                        remember_x_second_player = remember_x_second_player - 4;
+                        SetCursor(remember_x_second_player, remember_y_second_player);
+                    }
+                    break;
+                case Right:
+                    if (remember_x_second_player < 5 + fieldSize * 4 + 6 + fieldSize * 4 - 4)
+                    {
+                        remember_x_second_player = remember_x_second_player + 4;
+                        SetCursor(remember_x_second_player, remember_y_second_player);
+                    }
+                    break;
+                case Up:
+                    if (remember_y_second_player > 3)
+                    {
+                        remember_y_second_player = remember_y_second_player - 2;
+                        SetCursor(remember_x_second_player, remember_y_second_player);
+                    }
+                    break;
+                case Down:
+                    if (remember_y_second_player < 3 + fieldSize * 2 - 2)
+                    {
+                        remember_y_second_player = remember_y_second_player + 2;
+                        SetCursor(remember_x_second_player, remember_y_second_player);
+                    }
+                    break;
+                case Enter:
+                    rezult_second_player = board_first_player_ally.processShot(((remember_x_second_player - 5 - 6 - fieldSize * 4) / 4) + 1, ((remember_y_second_player - 3) / 2) + 1);
+                    board_second_player_enemy.processShot(((remember_x_second_player - 5 - 6 - fieldSize * 4) / 4) + 1, ((remember_y_second_player - 3) / 2) + 1);
+
+                    if (rezult_second_player == 1)
+                    {
+                        ship_sells_second_player--;
+                        if (ship_sells_second_player == 0)
+                        {
+                            system("cls");
+                            board_second_player_ally.display(true, board_second_player_enemy);
+                            win_second_player = true;
+                            break;
+                        }
+                        first_shot = false; // первый выстрел был сделан
+                    }
+
+                    if (rezult_second_player == 0)
+                    {
+                        system("cls");
+                        cout << "Информация полей боя для 2-го игрока.\n";
+                        board_second_player_ally.display(true, board_second_player_enemy);
+                        cout << "Промах. Ход переходит 1-му игроку!\n";
+                        system("pause");
+                    }
+                    break;
+                }
+            } while (key != Enter);
         }
     }
 
-    // Выстрелы
-    // Ходит Игрок №2
-    while (true)
+    if (win_first_player)
     {
+        cout << "Победа 1-го игрока!\n";
+    }
+    else
+    {
+        cout << "Победа 2-го игрока!\n";
+    }
+
+        /*
 
         int rezult_first_player = 1;
         int rezult_second_player = 1;
@@ -238,8 +503,8 @@ int main()
                 system("pause");
             }
         }
-    }
+        */
 
 
-    return 1;
+    return 0;
 }
