@@ -92,10 +92,10 @@ int main()
     Board board_second_player_enemy(fieldSize, true);
 
     // Расчёт количества кораблей
-    vector<ShipType> ships_ = calculateShips(fieldSize, remember_ship_sells);
+    vector<ShipType> ships = calculateShips(fieldSize, remember_ship_sells);
 
     cout << "Рекомендуемое количество кораблей для поля " << fieldSize << "x" << fieldSize << ":\n";
-    for (const auto& ship : ships_)
+    for (const auto& ship : ships)
     {
         cout << ship.name << " (размер " << ship.size << "): " << ship.count << "\n";
     }
@@ -105,16 +105,16 @@ int main()
     int remember_y_first_player_placement = 3;
 
     // расположение кораблей для игрока №1
-    for (int i = 0; i < ships_.size(); i++)
+    for (int i = 0; i < ships.size(); i++)
     {
-        for (int j = 0; j < ships_[i].count; j++)
+        for (int j = 0; j < ships[i].count; j++)
         {
             bool vertical = false;
 
             system("cls");
             cout << "Игрок 1, расположите свои корабли.\n";
             board_first_player_ally.display(false, board_first_player_ally);
-            cout << "Расположите " << ships_[i].name << " (размер " << ships_[i].size << "):\n";
+            cout << "Расположите " << ships[i].name << " (размер " << ships[i].size << "):\n";
 
             SetCursor(remember_x_first_player_placement, remember_y_first_player_placement);
             int key;
@@ -156,7 +156,7 @@ int main()
                     break;
                 case Enter:
                     pair<int, int> new_data((remember_x_first_player_placement - 5) / 4, (remember_y_first_player_placement - 3) / 2);
-                    Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
+                    Ship new_ship(ships[i].name, ships[i].size, new_data, vertical);
                     if (board_first_player_ally.can_place_ship(new_ship))
                     {
                         board_second_player_enemy.placeShip(new_ship);
@@ -179,16 +179,16 @@ int main()
     int remember_y_second_player_placement = 3;
 
     // расположение кораблей для игрока №2
-    for (int i = 0; i < ships_.size(); i++)
+    for (int i = 0; i < ships.size(); i++)
     {
-        for (int j = 0; j < ships_[i].count; j++)
+        for (int j = 0; j < ships[i].count; j++)
         {
             bool vertical = false;
 
             system("cls");
             cout << "Игрок 2, расположите свои корабли.\n";
             board_second_player_ally.display(false, board_second_player_ally);
-            cout << "Расположите " << ships_[i].name << " (размер " << ships_[i].size << "):\n";
+            cout << "Расположите " << ships[i].name << " (размер " << ships[i].size << "):\n";
 
             SetCursor(remember_x_second_player_placement, remember_y_second_player_placement);
             int key;
@@ -230,7 +230,7 @@ int main()
                     break;
                 case Enter:
                     pair<int, int> new_data((remember_x_second_player_placement - 5) / 4, (remember_y_second_player_placement - 3) / 2);
-                    Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
+                    Ship new_ship(ships[i].name, ships[i].size, new_data, vertical);
                     if (board_second_player_ally.can_place_ship(new_ship))
                     {
                         board_first_player_enemy.placeShip(new_ship);
@@ -249,7 +249,7 @@ int main()
     }
     Sleep(2000);
 
-   
+
     bool win_first_player = false, win_second_player = false;
     int ship_sells_first_player = remember_ship_sells, ship_sells_second_player = remember_ship_sells;
 
@@ -438,73 +438,6 @@ int main()
     {
         cout << "Победа 2-го игрока!\n";
     }
-
-        /*
-
-        int rezult_first_player = 1;
-        int rezult_second_player = 1;
-
-        // ход 1-го игрока
-        while (rezult_first_player == 1 || rezult_first_player == -1)
-        {
-            // вывод информации полей боя для 1-го игрока
-            cout << "Информация полей боя для 1-го игрока.\n";
-            board_first_player_ally.display(true, board_first_player_enemy);
-
-            int x, y;
-            cout << "Координаты x, y: ";
-            cin >> x >> y;
-
-            rezult_first_player = board_second_player_ally.processShot(x, y);
-            board_first_player_enemy.processShot(x, y);
-
-            if (rezult_first_player == 1)
-            {
-                cout << "Удачное попадание. Ходите ещё раз!\n";
-            }
-            else if (rezult_first_player == -1)
-            {
-                cout << "Вы уже стреляли в эту координату. Ходите заново!\n";
-            }
-            else
-            {
-                board_first_player_ally.display(true, board_first_player_enemy);
-                cout << "Промах. Ход переходи 2-му игроку!\n";
-                system("pause");
-            }
-        }
-
-        // ход 2-го игрока
-        while (rezult_second_player == 1 || rezult_second_player == -1)
-        {
-            // вывод информации полей боя для 2-го игрока
-            cout << "Информация полей боя для 2-го игрока.\n";
-            board_second_player_ally.display(true, board_second_player_enemy);
-
-            int x, y;
-            cout << "Координаты x, y: ";
-            cin >> x >> y;
-
-            rezult_second_player = board_first_player_ally.processShot(x, y);
-            board_second_player_enemy.processShot(x, y);
-
-            if (rezult_second_player == 1)
-            {
-                cout << "Удачное попадание. Ходите ещё раз!\n";
-            }
-            else if (rezult_second_player == -1)
-            {
-                cout << "Вы уже стреляли в эту координату.\n";
-            }
-            else
-            {
-                board_second_player_ally.display(true, board_second_player_enemy);
-                cout << "Промах. Ход переходи 1-му игроку!\n";
-                system("pause");
-            }
-        }
-        */
-
 
     return 0;
 }

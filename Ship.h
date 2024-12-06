@@ -18,7 +18,7 @@ public:
 
     // Методы получения данных
     int getSize() const { return size; }
-    const std::vector<std::pair<int, int>>& getCoordinates() const { return coordinates; }
+    const vector<pair<int, int>>& getCoordinates() const { return coordinates; }
     bool getDirection() const { return is_vertical; }
 
 
