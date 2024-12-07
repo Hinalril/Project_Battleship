@@ -1,9 +1,10 @@
 
 #include "Board.h"
 
-HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE); //ƒескриптор активного окна
+
 
 enum Color { Black = 0, DarkBlue = 1, Green = 2, Blue = 3, Red = 4, Purple = 5, Yellow = 6, White = 7, Grey = 8, LightBlue = 9, LightGreen = 10};
+
 
 void setColorWithBackground(Color textColor, Color backgroundColor)
 {
@@ -15,7 +16,11 @@ void setColorWithBackground(Color textColor, Color backgroundColor)
 }
 
 // ќпределение конструктора
-Board::Board(int size, bool hide_ships) : size(size), grid(size, vector<char>(size, ' ')), hide_ships(hide_ships) {}
+Board::Board(int size, bool hide_ships)
+    : size(size), grid(size, vector<char>(size, ' ')), hide_ships(hide_ships) {}
+
+Board::Board()
+    :size(0), hide_ships(true), grid(0, vector<char>(0, '.')) {}
 
 // –азмещение корабл€
 void Board::placeShip(const Ship& ship)
@@ -116,6 +121,142 @@ void Board::display(bool second_battlefield, const Board& second_board) const
     }
     cout << "\n";
 
+
+    // ѕечать строк с границами
+    for (int i = 0; i < size; ++i)
+    {
+        // ѕечать горизонтальной линии после заголовков столбцов
+        cout << "   +";
+        for (int i = 0; i < size; ++i)
+        {
+            cout << "---+";  // ѕечать горизонтальной линии дл€ каждой €чейки
+        }
+        if (second_battlefield)
+        {
+            cout << "  ";
+            // ѕечать горизонтальной линии после заголовков столбцов
+            cout << "   +";
+            for (int i = 0; i < size; ++i)
+            {
+                cout << "---+";  // ѕечать горизонтальной линии дл€ каждой €чейки
+            }
+        }
+        cout << "\n";
+
+        // ѕечать строк с границами
+
+        cout << setw(2) << i + 1 << " |";  // ѕечать номера строки и вертикальной границы
+
+        // ѕечать содержимого €чеек с вертикальными границами
+        for (int j = 0; j < size; ++j)
+        {
+            if (grid[j][i] == 'S')
+            {
+                setColorWithBackground(Red, Red);
+                cout << " " << grid[j][i] << " ";
+                setColorWithBackground(White, Black);
+                cout << "|";
+            }
+            else if (grid[j][i] == 'O')
+            {
+                setColorWithBackground(Grey, Grey);
+                cout << " " << grid[j][i] << " ";
+                setColorWithBackground(White, Black);
+                cout << "|";
+            }
+            else if (grid[j][i] == 'X')
+            {
+                setColorWithBackground(Purple, Purple);
+                cout << " " << grid[j][i] << " ";
+                setColorWithBackground(White, Black);
+                cout << "|";
+            }
+            else
+            {
+                cout << " " << grid[j][i] << " |";
+            }
+
+        }
+        if (second_battlefield)
+        {
+            cout << "  ";
+            cout << setw(2) << i + 1 << " |";  // ѕечать номера строки и вертикальной границы
+
+            // ѕечать содержимого €чеек с вертикальными границами
+            for (int j = 0; j < size; ++j)
+            {
+                if (second_board.grid[j][i] != 'S')
+                {
+                    if (second_board.grid[j][i] == 'O')
+                    {
+                        setColorWithBackground(Grey, Grey);
+                        cout << " " << second_board.grid[j][i] << " ";
+                        setColorWithBackground(White, Black);
+                        cout << "|";
+                    }
+                    else if (second_board.grid[j][i] == 'X')
+                    {
+                        setColorWithBackground(Purple, Purple);
+                        cout << " " << second_board.grid[j][i] << " ";
+                        setColorWithBackground(White, Black);
+                        cout << "|";
+                    }
+                    else
+                    {
+                        cout << " " << second_board.grid[j][i] << " |";
+                    }
+                }
+                else
+                {
+                    cout << "  " << " |";
+                }
+
+            }
+        }
+        cout << "\n";
+    }
+
+    // ѕечать горизонтальной линии после каждой строки
+    cout << "   +";
+    for (int j = 0; j < size; ++j)
+    {
+        cout << "---+";  // ѕечать горизонтальной линии дл€ каждой €чейки
+    }
+    if (second_battlefield)
+    {
+        cout << "  ";
+        cout << "   +";
+        for (int j = 0; j < size; ++j)
+        {
+            cout << "---+";  // ѕечать горизонтальной линии дл€ каждой €чейки
+        }
+    }
+    cout << "\n";
+}
+
+
+/*
+// ќтображение пол€
+void Board::display(bool second_battlefield, const Board& second_board) const
+{
+    // ѕечать верхней границы таблицы
+    cout << "    ";  // ќтступ перед номерами столбцов
+    for (int i = 0; i < size; ++i)
+    {
+        cout << setw(2) << i + 1 << "  ";  // ѕечать номеров столбцов
+    }
+    if (second_battlefield)
+    {
+        cout << "  ";
+        // ѕечать верхней границы таблицы
+        cout << "    ";  // ќтступ перед номерами столбцов
+        for (int i = 0; i < size; ++i)
+        {
+            cout << setw(2) << i + 1 << "  ";  // ѕечать номеров столбцов
+        }
+    }
+    cout << "\n";
+
     // ѕечать горизонтальной линии после заголовков столбцов
     cout << "   +";
     for (int i = 0; i < size; ++i)
@@ -142,7 +283,7 @@ void Board::display(bool second_battlefield, const Board& second_board) const
         // ѕечать содержимого €чеек с вертикальными границами
         for (int j = 0; j < size; ++j)
         {
-            if (!hide_ships)
+            if (second_battlefield)
             {
                 if (grid[j][i] == 'S')
                 {
@@ -287,6 +428,7 @@ void Board::display(bool second_battlefield, const Board& second_board) const
         cout << "\n";
     }
 }
+*/
 
 // ‘ункци€ дл€ проверки, помещаетс€ ли корабль на поле
 bool Board::can_place_ship(const Ship& ship)
@@ -473,3 +615,4 @@ bool Board::can_place_ship(const Ship& ship)
 
     return true;
 }
+
