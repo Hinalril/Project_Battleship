@@ -5,6 +5,13 @@
 
 using namespace std;
 
+struct ShipType
+{
+    string name;
+    int size;
+    int count;
+};
+
 class Ship
 {
 public:
