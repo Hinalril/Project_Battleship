@@ -39,8 +39,21 @@
 
 #include <iostream>
 #include <Windows.h>
+#include <fstream>
+#include <vector>
+#include <algorithm>
 #include "Board.h"
 #include "Ship.h"
+
+void print_pic(string file) { // рисует картинки из файлов
+    ifstream fin(file);
+    string temp;
+    while (!fin.eof()) {
+        fin >> temp;
+        cout << temp << endl;
+    }
+    fin.close();
+}
 
 struct ShipType
 {
@@ -93,6 +106,7 @@ vector<ShipType> calculateShips(int fieldSize)
 }
 
 
+
 int main()
 {
     SetConsoleCP(1251);
@@ -100,84 +114,112 @@ int main()
 
     vector<Ship> ships;
 
-    int fieldSize;
-    cout << "Введите размер поля: ";
-    cin >> fieldSize;
+    // Варианты команд предусмотренные программой
+    string play[] = {"новая игра", "Новая игра", "играть", "Играть", "начать", "Начать", "play",
+    "new game", "Play", "New game", "Start", "start"};
+    string continu[] = { "Загрузить игру", "Продолжить игру", "загрузить игру", "продолжить игру",
+    "загрузить", "Загрузить", "Продолжить", "продолжить", "continue", "Continue"};
+    string exit[] = { "Выйти", "выйти", "выход", "Выход", "Выйти из игры", "выйти из игры",
+    "exit", "Exit"};
 
-    Board board(fieldSize);
+    string answer; // Ответ пользователя
 
-    // Расчёт кораблей
-    vector<ShipType> ships_ = calculateShips(fieldSize);
+    while (true) { // Цикл главно меню
 
-    cout << "Рекомендуемое количество кораблей для поля " << fieldSize << "x" << fieldSize << ":\n";
-    for (const auto& ship : ships_)
-    {
-        cout << ship.name << " (размер " << ship.size << "): " << ship.count << "\n";
-    }
+        print_pic("images/main_menu.txt"); // Красивая картинка меню
+        cout << endl << "          Начать игру" << endl;
+        cout << "          Загрузить игру" << endl;
+        cout << "          Выйти" << endl;
+        cout << endl << ">> "; // выбор между вариантами
+        getline(cin, answer);
+        system("cls");
 
-    /*
-        Четырёхпалубный — Battleship.
-        Трёхпалубный — Cruiser.
-        Двухпалубный — Destroyer.
-        Однопалубный — Submarine.
-    */
+        if (find(play, play + 12, answer) != (play + 12)) { // Игрок решил начать игру
 
-    // расположение кораблей
-    for (int i = 0; i < ships_.size(); i++)
-    {
-        for (int j = 0; j < ships_[i].count; j++)
-        {
-            int x, y;
-            bool vertical;
+            int fieldSize;
+            cout << "Введите размер поля: ";
+            cin >> fieldSize;
 
-            cout << "Расположите " << ships_[i].name << " (размер " << ships_[i].size << "):\n";
-            cout << "Координаты x, y: ";
-            cin >> x >> y;
-            x--;
-            y--;
-            if (ships_[i].name != "Submarine")
+            Board board(fieldSize);
+
+            // Расчёт кораблей
+            vector<ShipType> ships_ = calculateShips(fieldSize);
+
+            cout << "Рекомендуемое количество кораблей для поля " << fieldSize << "x" << fieldSize << ":\n";
+            for (const auto& ship : ships_)
             {
-                cout << "Расположить вертикально? (0/1): ";
-                cin >> vertical;
-            }
-            else
-            {
-                vertical = true;
+                cout << ship.name << " (размер " << ship.size << "): " << ship.count << "\n";
             }
 
-            pair<int, int> new_data(x, y);
-            Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
+            /*
+                Четырёхпалубный — Battleship.
+                Трёхпалубный — Cruiser.
+                Двухпалубный — Destroyer.
+                Однопалубный — Submarine.
+            */
 
-            if (board.can_place_ship(new_ship))
+            // расположение кораблей
+            for (int i = 0; i < ships_.size(); i++)
             {
-                board.placeShip(new_ship);
-                ships.push_back(new_ship); // Добавляем корабль в список
-            }
-            else
-            {
-                cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
-                j--; // Повторим попытку размещения для этого корабля
+                for (int j = 0; j < ships_[i].count; j++)
+                {
+                    int x, y;
+                    bool vertical;
+
+                    cout << "Расположите " << ships_[i].name << " (размер " << ships_[i].size << "):\n";
+                    cout << "Координаты x, y: ";
+                    cin >> x >> y;
+                    x--;
+                    y--;
+                    if (ships_[i].name != "Submarine")
+                    {
+                        cout << "Расположить вертикально? (0/1): ";
+                        cin >> vertical;
+                    }
+                    else
+                    {
+                        vertical = true;
+                    }
+
+                    pair<int, int> new_data(x, y);
+                    Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
+
+                    if (board.can_place_ship(new_ship))
+                    {
+                        board.placeShip(new_ship);
+                        ships.push_back(new_ship); // Добавляем корабль в список
+                    }
+                    else
+                    {
+                        cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
+                        j--; // Повторим попытку размещения для этого корабля
+                    }
+
+                    board.display();
+                }
             }
 
+            // Выстрелы
+            board.processShot(2, 2); // Попадание
             board.display();
+            board.processShot(5, 6); // Промах
+            board.display();
+            board.processShot(0, 0); // Попадание (1/2)
+            board.display();
+            board.processShot(0, 1); // Попадание (2/2)
+            board.display();
+            board.processShot(2, 3); // Попадание (2/3)
+            board.display();
+            board.processShot(2, 4); // Попадание (3/3)
+
+            // Отображение после выстрелов
+            board.display();
+
+        } 
+        else if (find(play, play + 12, answer) != (play + 12)) { // Игрок решил продолжить игру
+
+        } else if (find(play, play + 12, answer) != (play + 12)) { // Игрок решил выйти
+            break;
         }
     }
-
-    // Выстрелы
-    board.processShot(2, 2); // Попадание
-    board.display();
-    board.processShot(5, 6); // Промах
-    board.display();
-    board.processShot(0, 0); // Попадание (1/2)
-    board.display();
-    board.processShot(0, 1); // Попадание (2/2)
-    board.display();
-    board.processShot(2, 3); // Попадание (2/3)
-    board.display();
-    board.processShot(2, 4); // Попадание (3/3)
-
-    // Отображение после выстрелов
-    board.display();
-
-    return 1;
 }
