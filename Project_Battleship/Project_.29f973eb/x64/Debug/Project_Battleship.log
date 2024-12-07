@@ -1,0 +1,6 @@
+﻿  Board.cpp
+  main.cpp
+  Ship.cpp
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\main.cpp(72,20): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+  Создание кода...
+  Project_Battleship.vcxproj -> C:\Users\user\source\repos\Project_Battleship\Project_Battleship\x64\Debug\Project_Battleship.exe
