@@ -39,9 +39,18 @@ PlayerStatistic::PlayerStatistic(int drawned_ships, int processed_shots, int suc
 PlayerStatistic::PlayerStatistic()
 : drawned_ships(0), processed_shots(0), sucessful_shots(0), percent_suc_shots(0) {} // компилятор требовал данный конструктор
 
-Player::Player(string name, bool human, Board my_ships, Board enemy_ships, vector<ShipType> ships)
+
+PlayerResultOfStep::PlayerResultOfStep(bool win_player, int result_player, bool first_shot)
+    :win_player(win_player), result_player(result_player), first_shot(first_shot){};
+
+PlayerResultOfStep::PlayerResultOfStep()
+    :win_player(false), result_player(1), first_shot(true) {};
+
+Player::Player(string name, bool human, Board my_ships, Board enemy_ships, vector<ShipType> ships, int ship_sells)
     : info(name, human, my_ships, enemy_ships), // Инициализация info
-    statistic(0, 0, 0, 0, ships) // Инициализация statistic
+    statistic(0, 0, 0, 0, ships), // Инициализация statistic
+    result_of_step(false, 1, true), // Инициализация result_of_step
+    ship_sells(ship_sells)
 {
 
 };
@@ -52,20 +61,20 @@ void Player::SetCursor(int x, int y) //функция для того чтобы устанавливать пози
     SetConsoleCursorPosition(hStdOut, myCoords); //Способ перемещения курсора на нужные координаты
 }
 
-void Player::AutoBoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name, Player& another_player)
+void Player::AutoBoardShipPlacement(string name, Player& another_player)
 {
     srand(time(NULL));
     pair<int, int> new_data;
-    for (int i = ships_player.size() - 1; i >= 0; i--)
+    for (int i = statistic.stat_alive_enemy_ships.size() - 1; i >= 0; i--)
     {
-        for (int j = ships_player[i].count; j > 0; j--)
+        for (int j = statistic.stat_alive_enemy_ships[i].count; j > 0; j--)
         {
             bool vertical = rand() % 2;
             int x, y;
-            x = rand() % fieldSize;
-            y = rand() % fieldSize;
+            x = rand() % info.my_ships.size;
+            y = rand() % info.my_ships.size;
             pair<int, int> new_data(x, y);
-            Ship new_ship(ships_player[i].name, ships_player[i].size, new_data, vertical);
+            Ship new_ship(statistic.stat_alive_enemy_ships[i].name, statistic.stat_alive_enemy_ships[i].size, new_data, vertical);
             if (info.my_ships.can_place_ship(new_ship))
             {
                 another_player.info.enemy_ships.placeShip(new_ship);
@@ -84,21 +93,21 @@ void Player::AutoBoardShipPlacement(vector<ShipType> ships_player, int fieldSize
     }
 }
 
-void Player::BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name, Player& another_player)
+void Player::BoardShipPlacement(string name, Player& another_player)
 {
     int remember_x = 5, remember_y = 3; // начальные координаты курсора
 
     // расположение кораблей для игрока
-    for (int i = ships_player.size() - 1; i >= 0; i--)
+    for (int i = statistic.stat_alive_enemy_ships.size() - 1; i >= 0; i--)
     {
-        for (int j = ships_player[i].count; j > 0; j--)
+        for (int j = statistic.stat_alive_enemy_ships[i].count; j > 0; j--)
         {
             bool vertical = false;
 
             system("cls");
             cout << name << ", расположите свои корабли.\n";
             info.my_ships.display(false, info.my_ships);
-            cout << "Расположите " << ships_player[i].name << " (размер " << ships_player[i].size << "):\n";
+            cout << "Расположите " << statistic.stat_alive_enemy_ships[i].name << " (размер " << statistic.stat_alive_enemy_ships[i].size << "):\n";
 
             int key;
             pair<int, int> new_data;
@@ -115,17 +124,17 @@ void Player::BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, st
                         info.my_ships.display(false, info.my_ships);
                         remember_x = remember_x - 4;
                         SetCursor(remember_x, remember_y);
-                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
+                        paintFutureShip(remember_x, remember_y, statistic.stat_alive_enemy_ships[i], vertical);
                     }
                     break;
                 case Right:
-                    if (remember_x < 5 + fieldSize * 4 - 4)
+                    if (remember_x < 5 + info.my_ships.size * 4 - 4)
                     {
                         SetCursor(0, 1);
                         info.my_ships.display(false, info.my_ships);
                         remember_x = remember_x + 4;
                         SetCursor(remember_x, remember_y);
-                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
+                        paintFutureShip(remember_x, remember_y, statistic.stat_alive_enemy_ships[i], vertical);
                     }
                     break;
                 case Up:
@@ -135,17 +144,17 @@ void Player::BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, st
                         info.my_ships.display(false, info.my_ships);
                         remember_y = remember_y - 2;
                         SetCursor(remember_x, remember_y);
-                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
+                        paintFutureShip(remember_x, remember_y, statistic.stat_alive_enemy_ships[i], vertical);
                     }
                     break;
                 case Down:
-                    if (remember_y < 3 + fieldSize * 2 - 2)
+                    if (remember_y < 3 + info.my_ships.size * 2 - 2)
                     {
                         SetCursor(0, 1);
                         info.my_ships.display(false, info.my_ships);
                         remember_y = remember_y + 2;
                         SetCursor(remember_x, remember_y);
-                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
+                        paintFutureShip(remember_x, remember_y, statistic.stat_alive_enemy_ships[i], vertical);
                     }
                     break;
                 case Tab:
@@ -154,20 +163,20 @@ void Player::BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, st
                         SetCursor(0, 1);
                         info.my_ships.display(false, info.my_ships);
                         vertical = true;
-                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
+                        paintFutureShip(remember_x, remember_y, statistic.stat_alive_enemy_ships[i], vertical);
                     }
                     else
                     {
                         SetCursor(0, 1);
                         info.my_ships.display(false, info.my_ships);
                         vertical = false;
-                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
+                        paintFutureShip(remember_x, remember_y, statistic.stat_alive_enemy_ships[i], vertical);
                     }
                     break;
                 case Enter:
                     new_data.first = (remember_x - 5) / 4;
                     new_data.second = (remember_y - 3) / 2;
-                    Ship new_ship(ships_player[i].name, ships_player[i].size, new_data, vertical);
+                    Ship new_ship(statistic.stat_alive_enemy_ships[i].name, statistic.stat_alive_enemy_ships[i].size, new_data, vertical);
                     if (info.my_ships.can_place_ship(new_ship))
                     {
                         another_player.info.enemy_ships.placeShip(new_ship);
@@ -190,7 +199,7 @@ void Player::BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, st
     Sleep(2000);
 }
 
-int Player::Attack_computer(bool* first_shot, Player* another_player)
+void Player::Attack_computer(Player* another_player)
 {
     static bool target_mode = false;                  // Режим "уничтожение"
     static vector<pair<int, int>> target_queue;       // Очередь координат для атаки
@@ -216,11 +225,6 @@ int Player::Attack_computer(bool* first_shot, Player* another_player)
     // Выполняем выстрел
     PlayerResultOfShot rezult = (*another_player).info.my_ships.processShot(x, y);
     info.enemy_ships.processShot(x, y);
-
-    /*
-    rezult = (*another_player).info.my_ships.processShot(((*remember_x - 5 - 6 - fieldSize * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
-    info.enemy_ships.processShot(((*remember_x - 5 - 6 - fieldSize * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
-    */
 
     my_stat(rezult);
 
@@ -255,13 +259,14 @@ int Player::Attack_computer(bool* first_shot, Player* another_player)
                 target_queue.emplace_back(x, y + 1);
             }
         }
-        *first_shot = false; // первый выстрел был сделан
+        result_of_step.first_shot = true; // первый выстрел был сделан // данные не используются для компьютера
 
         // Вывод отладочной информации
         cout << "Компьютер атакует: (" << x << ", " << y << ")";
         cout << " — Попадание!\n";
-
-        return 1;
+        
+        result_of_step.result_player = 1;
+        return ;
     }
     else if (rezult.rezult_of_shot == 0)
     {
@@ -269,19 +274,23 @@ int Player::Attack_computer(bool* first_shot, Player* another_player)
         cout << "Компьютер атакует: (" << x << ", " << y << ")";
         cout << " — Промах.\n";
 
-        return 0;
+        result_of_step.result_player = 0;
+        return ;
     }
     else
     {
+        // Вывод отладочной информации
         cout << "Компьютер атакует: (" << x << ", " << y << ")";
         cout << " — Уже стреляли.\n";
-        return -1;
+
+        result_of_step.result_player = -1;
+        return ;
     }
 }
 
-int Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize, bool* first_shot,  Player* another_player, int* ship_sells, bool* win_player)
+void Player::Attack_manual(int* remember_x, int* remember_y, Player* another_player)
 {
-    PlayerResultOfShot rezult;
+    PlayerResultOfShot rezult_shot;
     SetCursor(*remember_x, *remember_y);
     int key;
     do
@@ -290,14 +299,14 @@ int Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize,
         switch (key)
         {
         case Left:
-            if (*remember_x > 5 + fieldSize * 4 + 6)
+            if (*remember_x > 5 + info.my_ships.size * 4 + 6)
             {
                 *remember_x = *remember_x - 4;
                 SetCursor(*remember_x, *remember_y);
             }
             break;
         case Right:
-            if (*remember_x < 5 + fieldSize * 4 + 6 + fieldSize * 4 - 4)
+            if (*remember_x < 5 + info.my_ships.size * 4 + 6 + info.my_ships.size * 4 - 4)
             {
                 *remember_x = *remember_x + 4;
                 SetCursor(*remember_x, *remember_y);
@@ -311,32 +320,33 @@ int Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize,
             }
             break;
         case Down:
-            if (*remember_y < 3 + fieldSize * 2 - 2)
+            if (*remember_y < 3 + info.my_ships.size * 2 - 2)
             {
                 *remember_y = *remember_y + 2;
                 SetCursor(*remember_x, *remember_y);
             }
             break;
         case Enter:
-            rezult = (*another_player).info.my_ships.processShot(((*remember_x - 5 - 6 - fieldSize * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
-            info.enemy_ships.processShot(((*remember_x - 5 - 6 - fieldSize * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
+            rezult_shot = (*another_player).info.my_ships.processShot(((*remember_x - 5 - 6 - info.my_ships.size * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
+            info.enemy_ships.processShot(((*remember_x - 5 - 6 - info.my_ships.size * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
+            result_of_step.result_player = rezult_shot.rezult_of_shot;
 
-            my_stat(rezult);
+            my_stat(rezult_shot);
 
-            if (rezult.rezult_of_shot == 1)
+            if (rezult_shot.rezult_of_shot == 1)
             {
-                (*ship_sells)--;
-                if (*ship_sells == 0)
+                ship_sells--;
+                if (ship_sells == 0)
                 {
                     system("cls");
                     info.my_ships.display(true, info.enemy_ships);
-                    *win_player = true;
+                    result_of_step.win_player = true;
                     break;
                 }
-                *first_shot = false; // первый выстрел был сделан
+                result_of_step.first_shot = true; // первый выстрел был сделан
             }
 
-            if (rezult.rezult_of_shot == 0)
+            if (rezult_shot.rezult_of_shot == 0)
             {
                 system("cls");
                 cout << "Информация полей боя для % игрока.\n";
@@ -347,7 +357,6 @@ int Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize,
             break;
         }
     } while (key != Enter);
-    return rezult.rezult_of_shot;
 }
 
 // вывод живых кораблей
@@ -411,8 +420,6 @@ void Player::my_stat(PlayerResultOfShot rezult)
     }
     statistic.stat_alive_enemy_ships = CalcStatShips(statistic.initial_ships, statistic.stat_alive_enemy_ships, statistic.initial_ships, info.enemy_ships);
 }
-
-
 
 void Player::output_stat(int fieldSize)
 {

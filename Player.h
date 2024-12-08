@@ -35,6 +35,16 @@ struct PlayerStatistic
 
 };
 
+struct PlayerResultOfStep
+{
+	bool win_player;
+	int result_player;
+	bool first_shot;
+
+	PlayerResultOfStep(bool win_player, int result_player, bool first_shot);
+	PlayerResultOfStep();
+};
+
 class Player
 {
 private:
@@ -43,14 +53,16 @@ private:
 public:
 	PlayerInfo info;
 	PlayerStatistic statistic;
+	PlayerResultOfStep result_of_step;
+	int ship_sells;
 	
-	Player(string name, bool human, Board my_ships, Board enemy_ships, vector<ShipType> ships);  //  онструктор с параметрами
+	Player(string name, bool human, Board my_ships, Board enemy_ships, vector<ShipType> ships, int ship_sells);  //  онструктор с параметрами
 
 	void SetCursor(int x, int y); //функци€ дл€ того чтобы устанавливать позицию курсора в консоли по оси ’ и Y
-	void AutoBoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name, Player& another_player);
-	void BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name, Player& another_player); // расположение кораблей по поле бо€ (ручное)
-	int Attack_manual(int* remember_x, int* remember_y, const int fieldSize, bool* first_shot, Player* another_player, int* ship_sells, bool* win_player);
-	int Attack_computer(bool* first_shot, Player* another_player);
+	void AutoBoardShipPlacement(string name, Player& another_player);
+	void BoardShipPlacement(string name, Player& another_player); // расположение кораблей по поле бо€ (ручное)
+	void Attack_manual(int* remember_x, int* remember_y, Player* another_player);
+	void Attack_computer(Player* another_player);
 	vector<ShipType> CalcStatShips(vector<ShipType> ships, vector<ShipType> ships_player, vector<ShipType> initial_ships, Board board);
 	void my_stat(PlayerResultOfShot rezult);
 	void paintFutureShip(int x, int y, ShipType ship_player, bool vertical);

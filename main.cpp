@@ -184,15 +184,12 @@ int main()
     // ##############################################################################################
 
 
-    Player player1("Игрок 1", true, board_first_player_ally, board_second_player_ally, ships), player2("Игрок 2", true, board_second_player_ally, board_first_player_ally, ships);
+    Player player1("Игрок 1", true, board_first_player_ally, board_second_player_ally, ships, remember_ship_sells);
+    Player player2("Игрок 2", true, board_second_player_ally, board_first_player_ally, ships, remember_ship_sells);
 
-    player1.BoardShipPlacement(player1.statistic.stat_alive_enemy_ships, fieldSize, "Игрок 1", player2);
-    player2.AutoBoardShipPlacement(player2.statistic.stat_alive_enemy_ships, fieldSize, "Игрок 2", player1);
-    //player2.BoardShipPlacement(player2.statistic.stat_alive_enemy_ships, fieldSize, "Игрок 2", player1);
-
-
-    bool win_first_player = false, win_second_player = false;
-    int ship_sells_first_player = remember_ship_sells, ship_sells_second_player = remember_ship_sells;
+    player1.BoardShipPlacement("Игрок 1", player2);
+    //player2.AutoBoardShipPlacement(player2.statistic.stat_alive_enemy_ships, fieldSize, "Игрок 2", player1);
+    player2.BoardShipPlacement("Игрок 2", player1);
 
     int remember_x_first_player = 5 + fieldSize * 4 + 6;
     int remember_y_first_player = 3;
@@ -200,87 +197,65 @@ int main()
     int remember_x_second_player = 5 + fieldSize * 4 + 6;
     int remember_y_second_player = 3;
 
-    while (!win_first_player && !win_second_player)
+    while (!player1.result_of_step.win_player && !player2.result_of_step.win_player)
     {
-        int rezult_first_player = 1; // int - результат попадания
-                                     // 1 - попадание
-                                     // 0 - промах
-                                     // -1 - клетка уже занята, повтор хода
-        bool first_shot = true; // отслеживание первого выстрела в ходе игрока (если сделан первый выстрел, значит игрок может сделать 2-ой)
-
+        player1.result_of_step.result_player = 1;
+        player1.result_of_step.first_shot = false;
         // ходит игрок №1
-        while ((rezult_first_player == 1 || rezult_first_player == -1) && !win_first_player)
+        while ((player1.result_of_step.result_player == 1 || player1.result_of_step.result_player == -1) && !player1.result_of_step.win_player)
         {
             system("cls");
             cout << "Информация полей боя для 1-го игрока.\n";
             player1.info.my_ships.display(true, player1.info.enemy_ships);
             player1.output_stat(fieldSize);
 
-            if (rezult_first_player == 1 && first_shot == false)
+            if (player1.result_of_step.result_player == 1 && player1.result_of_step.first_shot == true)
             {
                 cout << "Удачное попадание. Ходите ещё раз!\n";
             }
-            if (rezult_first_player == -1)
+            if (player1.result_of_step.result_player == -1)
             {
                 cout << "Вы уже стреляли в эту координату. Ходите заново!\n";
             }
 
-            rezult_first_player = player1.Attack_manual(&remember_x_first_player, &remember_y_first_player, fieldSize, &first_shot, &player2, &ship_sells_first_player, &win_first_player);
+            player1.Attack_manual(&remember_x_first_player, &remember_y_first_player, &player2);
+        }
+
+        // ДЛЯ КОМПЬЮТЕРА
+        player2.result_of_step.result_player = 1;
+        player2.result_of_step.first_shot = false;
+
+        while ((player2.result_of_step.result_player == 1 || player2.result_of_step.result_player == -1) && !player2.result_of_step.win_player && !player1.result_of_step.win_player)
+        {
+            player2.Attack_computer(&player1);
         }
 
         /*
-        int rezult_second_player = 1;
-        first_shot = true;
-
-        while ((rezult_second_player == 1 || rezult_second_player == -1) && !win_second_player && !win_first_player)
+        // ходит игрок №2
+        player2.result_of_step.result_player = 1;
+        player2.result_of_step.first_shot = false;
+        while ((player2.result_of_step.result_player == 1 || player2.result_of_step.result_player == -1) && !player2.result_of_step.win_player && !player1.result_of_step.win_player)
         {
             system("cls");
             cout << "Информация полей боя для 2-го игрока.\n";
             player2.info.my_ships.display(true, player2.info.enemy_ships);
             player2.output_stat(fieldSize);
 
-            if (rezult_second_player == 1 && first_shot == false)
+            if (player2.result_of_step.result_player == 1 && player2.result_of_step.first_shot == true)
             {
                 cout << "Удачное попадание. Ходите ещё раз!\n";
             }
-            if (rezult_second_player == -1)
+            if (player2.result_of_step.result_player == -1)
             {
                 cout << "Вы уже стреляли в эту координату. Ходите заново!\n";
             }
 
-            rezult_second_player = player2.Attack_computer(&first_shot, &player1);
-
+            player2.Attack_manual(&remember_x_second_player, &remember_y_second_player, &player1);
         }
         */
-
-        
-        /*
-        int rezult_second_player = 1;
-        first_shot = true;
-
-        // ходит игрок №2
-        while ((rezult_second_player == 1 || rezult_second_player == -1) && !win_second_player && !win_first_player)
-        {
-            system("cls");
-            cout << "Информация полей боя для 2-го игрока.\n";
-            player2.info.my_ships.display(true, player2.info.enemy_ships);
-            player2.output_stat(fieldSize);
-
-            if (rezult_second_player == 1 && first_shot == false)
-            {
-                cout << "Удачное попадание. Ходите ещё раз!\n";
-            }
-            if (rezult_second_player == -1)
-            {
-                cout << "Вы уже стреляли в эту координату. Ходите заново!\n";
-            }
-
-            rezult_first_player = player2.Attack_manual(&remember_x_second_player, &remember_y_second_player, fieldSize, &first_shot, &player1, &ship_sells_second_player, &win_second_player);
-        }*/
-        
     }
 
-    if (win_first_player)
+    if (player1.result_of_step.win_player)
     {
         cout << "Победа 1-го игрока!\n";
     }
