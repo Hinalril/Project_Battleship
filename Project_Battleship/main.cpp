@@ -74,24 +74,6 @@ struct ShipType
     int count;
 };
 
-void game(Board board) { // сама игра в морской бой
-    // Выстрелы
-    board.processShot(2, 2); // Попадание
-    board.display();
-    board.processShot(5, 6); // Промах
-    board.display();
-    board.processShot(0, 0); // Попадание (1/2)
-    board.display();
-    board.processShot(0, 1); // Попадание (2/2)
-    board.display();
-    board.processShot(2, 3); // Попадание (2/3)
-    board.display();
-    board.processShot(2, 4); // Попадание (3/3)
-
-    // Отображение после выстрелов
-    board.display();
-}
-
 vector<ShipType> calculateShips(int fieldSize)
 {
     int totalCells = fieldSize * fieldSize;        // Общее количество клеток
@@ -135,11 +117,123 @@ vector<ShipType> calculateShips(int fieldSize)
     return ships;
 }
 
-string answer; // Ответ пользователя
+void game_pvp(Board boards[], vector<Ship> ships[], int fieldSize) { // сама игра в морской бой
+    
+    /* Выстрелы
+    board.processShot(2, 2); // Попадание
+    board.display();
+    board.processShot(5, 6); // Промах
+    board.display();
+    board.processShot(0, 0); // Попадание (1/2)
+    board.display();
+    board.processShot(0, 1); // Попадание (2/2)
+    board.display();
+    board.processShot(2, 3); // Попадание (2/3)
+    board.display();
+    board.processShot(2, 4); // Попадание (3/3)
+
+    // Отображение после выстрелов
+    board.display();
+    */
+
+}
+
+void game_pvc(Board boards[], vector<Ship> ships[], int fieldSize) { // сама игра в морской бой
+    /* Выстрелы
+    board.processShot(2, 2); // Попадание
+    board.display();
+    board.processShot(5, 6); // Промах
+    board.display();
+    board.processShot(0, 0); // Попадание (1/2)
+    board.display();
+    board.processShot(0, 1); // Попадание (2/2)
+    board.display();
+    board.processShot(2, 3); // Попадание (2/3)
+    board.display();
+    board.processShot(2, 4); // Попадание (3/3)
+
+    // Отображение после выстрелов
+    board.display();
+    */
+}
+
+void fill_board(Board &board, int fieldSize, vector<Ship> &ships, string user_name) {
+
+    // Расчёт кораблей
+    vector<ShipType> ships_ = calculateShips(fieldSize);
+
+    /*
+        Четырёхпалубный — Battleship.
+        Трёхпалубный — Cruiser.
+        Двухпалубный — Destroyer.
+        Однопалубный — Submarine.
+    */
+
+    // расположение кораблей
+    for (int i = 0; i < ships_.size(); i++)
+    {
+        while (ships_[i].count != 0)
+        {
+            cout << user_name << " расставляет корабли!" << endl << endl; // кто выставляет
+
+            cout << "Осталось расставить кораблей:" << endl; // сколько осталось
+            for (int k = 0; k < ships_.size(); k++)
+            {
+                cout << ships_[k].name << " (размер " << ships_[k].size << "): " << ships_[k].count << "\n";
+            }
+            cout << endl;
+
+            board.display(); // дисплей
+            cout << endl;
+
+            int x, y;
+            bool vertical;
+
+            // Просим у пользователя координаты
+            cout << "Расположите " << ships_[i].name << " (размер " << ships_[i].size << "):\n";
+            x = require<int>("Координата x: ", "Невозможная координата!",
+                [](int a) {return a >= 1 && a <= 15; });
+            y = require<int>("Координата y: ", "Невозможная координата!",
+                [](int a) {return a >= 1 && a <= 15; });
+            if (x > fieldSize || y > fieldSize) continue;
+
+            x--;
+            y--;
+            if (ships_[i].name != "Submarine")
+            {
+                vertical = require<bool>("Расположить вертикально? (0/1): ",
+                    "Неправильные данные!",
+                    [](bool a) {return a == 1 || a == 0; });
+            }
+            else
+            {
+                vertical = true;
+            }
+
+            pair<int, int> new_data(x, y);
+            Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
+
+            if (board.can_place_ship(new_ship))
+            {
+                board.placeShip(new_ship);
+                ships.push_back(new_ship); // Добавляем корабль в список
+
+                ships_[i].count--;
+            }
+            else
+            {
+                cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
+                // Повторим попытку размещения для этого корабля
+            }
+
+            system("cls");
+        }
+    }
+
+}
 
 void make_game() { // создание игры, ввод параметров, расстановка короблей
 
-    vector<Ship> ships;
     int fieldSize;
     string mode;
 
@@ -149,77 +243,29 @@ void make_game() { // создание игры, ввод параметров, 
     mode = require<string>("Выберете режим(pvp/pvc): ", "Такого режима нет",
         [](string a) {return a == "pvp" || a == "pvc"; }); // просьба ввести режим игры
 
-    if (mode == "pvp") { // РЕЖИМ ИГРОК ПРОТИВ ИГРОКА
+    system("cls");
 
+    vector<Ship> ships[2];
+    Board boards[2] = { fieldSize, fieldSize };
+
+    if (mode == "pvp") { // РЕЖИМ ИГРОК ПРОТИВ ИГРОКА
+        for (int i = 0; i < 2; i++) {
+            fill_board(boards[i], fieldSize, ships[i], "Игрок " + to_string(i + 1));
+        }
+        game_pvp(boards, ships, fieldSize);
     }
     else { // РЕЖИМ ИГРОК ПРОТИВ КОМПЬЮТЕРА
-        Board board(fieldSize);
-
-        // Расчёт кораблей
-        vector<ShipType> ships_ = calculateShips(fieldSize);
-
-        cout << "Рекомендуемое количество кораблей для поля " << fieldSize << "x" << fieldSize << ":\n";
-        for (const auto& ship : ships_)
-        {
-            cout << ship.name << " (размер " << ship.size << "): " << ship.count << "\n";
-        }
-
+        fill_board(boards[0], fieldSize, ships[0], "Игрок");
+        
         /*
-            Четырёхпалубный — Battleship.
-            Трёхпалубный — Cruiser.
-            Двухпалубный — Destroyer.
-            Однопалубный — Submarine.
+        
+        Задача для Насти!!! Написать здесь чтобы компьютер сам расставил корабли на
+        поле board[1] и записал их в ships[1].
+
         */
-
-        // расположение кораблей
-        for (int i = 0; i < ships_.size(); i++)
-        {
-            for (int j = 0; j < ships_[i].count; j++)
-            {
-                board.display();
-
-                int x, y;
-                bool vertical;
-
-                cout << "Расположите " << ships_[i].name << " (размер " << ships_[i].size << "):\n";
-                cout << "Координаты x, y: ";
-                /*x = require<int>("Координата x: ", "Невозможная координата!",
-                    [fieldSize](int a) {return a >= 1 && a <= fieldSize; });*/
-                cin >> x >> y;
-                x--;
-                y--;
-                if (ships_[i].name != "Submarine")
-                {
-                    vertical = require<bool>("Расположить вертикально? (0/1): ", 
-                        "Неправильные данные!",
-                        [](bool a) {return a == 1 || a == 0; });
-                }
-                else
-                {
-                    vertical = true;
-                }
-
-                pair<int, int> new_data(x, y);
-                Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
-
-                if (board.can_place_ship(new_ship))
-                {
-                    board.placeShip(new_ship);
-                    ships.push_back(new_ship); // Добавляем корабль в список
-                }
-                else
-                {
-                    cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
-                    j--; // Повторим попытку размещения для этого корабля
-                }
-
-                system("cls");
-            }
-        }
-        game(board);
+        
+        game_pvc(boards, ships, fieldSize);
     }
-
-    
 }
 
 void load_game() { // загрузка игр
@@ -232,12 +278,15 @@ int main()
     SetConsoleOutputCP(1251);
 
     // Варианты команд предусмотренные программой
-    string play[] = { "начать игру", "Начать игру", "начать", "Начать", "новая игра", "Новая игра", "играть", "Играть", "начать", "Начать", "play",
-    "new game", "Play", "New game", "Start", "start" };
+    string play[] = { "начать игру", "Начать игру", "начать", "Начать", "новая игра", 
+        "Новая игра", "играть", "Играть", "начать", "Начать", "play",
+        "new game", "Play", "New game", "Start", "start" };
     string continu[] = { "Загрузить игру", "Продолжить игру", "загрузить игру", "продолжить игру",
-    "загрузить", "Загрузить", "Продолжить", "продолжить", "continue", "Continue" };
+        "загрузить", "Загрузить", "Продолжить", "продолжить", "continue", "Continue" };
     string exit[] = { "Выйти", "выйти", "выход", "Выход", "Выйти из игры", "выйти из игры",
-    "exit", "Exit" };
+        "exit", "Exit" };
+
+    string answer; // Ответ пользователя
 
     while (true) { // Цикл главно меню
 
@@ -249,13 +298,13 @@ int main()
         getline(cin, answer);
         system("cls");
 
-        if (find(play, play + 12, answer) != (play + 12)) { // Игрок решил начать игру
+        if (find(play, play + 16, answer) != (play + 16)) { // Игрок решил начать игру
             make_game();
         }
-        else if (find(continu, continu + 12, answer) != (continu + 12)) { // Игрок решил продолжить игру
+        else if (find(continu, continu + 10, answer) != (continu + 10)) { // Игрок решил продолжить игру
 
         }
-        else if (find(exit, exit + 12, answer) != (exit + 12)) { // Игрок решил выйти
+        else if (find(exit, exit + 8, answer) != (exit + 8)) { // Игрок решил выйти
             break;
         }
     }
