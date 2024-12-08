@@ -74,6 +74,24 @@ struct ShipType
     int count;
 };
 
+void game(Board board) { // сама игра в морской бой
+    // Выстрелы
+    board.processShot(2, 2); // Попадание
+    board.display();
+    board.processShot(5, 6); // Промах
+    board.display();
+    board.processShot(0, 0); // Попадание (1/2)
+    board.display();
+    board.processShot(0, 1); // Попадание (2/2)
+    board.display();
+    board.processShot(2, 3); // Попадание (2/3)
+    board.display();
+    board.processShot(2, 4); // Попадание (3/3)
+
+    // Отображение после выстрелов
+    board.display();
+}
+
 vector<ShipType> calculateShips(int fieldSize)
 {
     int totalCells = fieldSize * fieldSize;        // Общее количество клеток
@@ -165,8 +183,8 @@ void make_game() { // создание игры, ввод параметров, 
 
                 cout << "Расположите " << ships_[i].name << " (размер " << ships_[i].size << "):\n";
                 cout << "Координаты x, y: ";
-                x = require<int>("Координата x: ", "Невозможная координата!",
-                    [fieldSize](int a) {return a >= 1 && a <= fieldSize; });
+                /*x = require<int>("Координата x: ", "Невозможная координата!",
+                    [fieldSize](int a) {return a >= 1 && a <= fieldSize; });*/
                 cin >> x >> y;
                 x--;
                 y--;
@@ -204,24 +222,6 @@ void make_game() { // создание игры, ввод параметров, 
     
 }
 
-void game(Board board) { // сама игра в морской бой
-    // Выстрелы
-    board.processShot(2, 2); // Попадание
-    board.display();
-    board.processShot(5, 6); // Промах
-    board.display();
-    board.processShot(0, 0); // Попадание (1/2)
-    board.display();
-    board.processShot(0, 1); // Попадание (2/2)
-    board.display();
-    board.processShot(2, 3); // Попадание (2/3)
-    board.display();
-    board.processShot(2, 4); // Попадание (3/3)
-
-    // Отображение после выстрелов
-    board.display();
-}
-
 void load_game() { // загрузка игр
 
 }
@@ -232,7 +232,7 @@ int main()
     SetConsoleOutputCP(1251);
 
     // Варианты команд предусмотренные программой
-    string play[] = { "новая игра", "Новая игра", "играть", "Играть", "начать", "Начать", "play",
+    string play[] = { "начать игру", "Начать игру", "начать", "Начать", "новая игра", "Новая игра", "играть", "Играть", "начать", "Начать", "play",
     "new game", "Play", "New game", "Start", "start" };
     string continu[] = { "Загрузить игру", "Продолжить игру", "загрузить игру", "продолжить игру",
     "загрузить", "Загрузить", "Продолжить", "продолжить", "continue", "Continue" };
@@ -250,7 +250,7 @@ int main()
         system("cls");
 
         if (find(play, play + 12, answer) != (play + 12)) { // Игрок решил начать игру
-
+            make_game();
         }
         else if (find(continu, continu + 12, answer) != (continu + 12)) { // Игрок решил продолжить игру
 
