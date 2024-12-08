@@ -49,8 +49,8 @@ public:
 	void SetCursor(int x, int y); //функция для того чтобы устанавливать позицию курсора в консоли по оси Х и Y
 	void AutoBoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name, Player& another_player);
 	void BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name, Player& another_player); // расположение кораблей по поле боя (ручное)
-	void Attack_manual(int* remember_x, int* remember_y, const int fieldSize, int* rezult_player, bool* first_shot, Player* another_player, int* ship_sells, bool* win_player);
-	void Attack_computer();
+	int Attack_manual(int* remember_x, int* remember_y, const int fieldSize, bool* first_shot, Player* another_player, int* ship_sells, bool* win_player);
+	int Attack_computer(bool* first_shot, Player* another_player);
 	vector<ShipType> CalcStatShips(vector<ShipType> ships, vector<ShipType> ships_player, vector<ShipType> initial_ships, Board board);
 	void my_stat(PlayerResultOfShot rezult);
 	void paintFutureShip(int x, int y, ShipType ship_player, bool vertical);
@@ -58,16 +58,5 @@ public:
 
 	~Player() = default; // Деструктор
 
-	/* нет:
-	* 1. 
-	* 2. алгоритм атаки компьютерного игрока (ИИ)
-	* 3. ведение статистики игрока (например, через структуру): 1. количество потопленных кораблей
-								*								2. количесво совершенных выстрелов
-								*								3. количество успешных попаданий
-								*								4. процент успешных попаданий
-								*								5. общее количество сделанных ходов
-	*							
-
-	*/
-
+	// ИИ глупый - доделать
 };

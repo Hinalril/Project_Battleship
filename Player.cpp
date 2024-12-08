@@ -190,13 +190,98 @@ void Player::BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, st
     Sleep(2000);
 }
 
-void Player::Attack_computer()
+int Player::Attack_computer(bool* first_shot, Player* another_player)
 {
+    static bool target_mode = false;                  // Режим "уничтожение"
+    static vector<pair<int, int>> target_queue;       // Очередь координат для атаки
+    int fieldSize = info.enemy_ships.size;            // Размер игрового поля
 
+    int x = 0, y = 0;                                 // Координаты выстрела
+    if (target_mode && !target_queue.empty())
+    {
+        x = target_queue.back().first;
+        y = target_queue.back().second;
+        target_queue.pop_back();
+    }
+    else
+    {
+        // Генерация случайных координат для выстрела
+        do
+        {
+            x = rand() % fieldSize + 1; // Координаты от 1 до fieldSize
+            y = rand() % fieldSize + 1;
+        } while (info.enemy_ships.grid[x - 1][y - 1] == 'O' || info.enemy_ships.grid[x - 1][y - 1] == 'X');
+    }
+
+    // Выполняем выстрел
+    PlayerResultOfShot rezult = (*another_player).info.my_ships.processShot(x, y);
+    info.enemy_ships.processShot(x, y);
+
+    /*
+    rezult = (*another_player).info.my_ships.processShot(((*remember_x - 5 - 6 - fieldSize * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
+    info.enemy_ships.processShot(((*remember_x - 5 - 6 - fieldSize * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
+    */
+
+    my_stat(rezult);
+
+    if (rezult.rezult_of_shot == 1) // Попадание
+    {
+        if (rezult.rezult_ship.second) // Уничтожение корабля
+        {
+            target_mode = false;      // Сбрасываем режим уничтожения
+            target_queue.clear();     // Очищаем очередь
+        }
+        else
+        {
+            target_mode = true;       // Включаем режим уничтожения
+            //          [x,y-1]
+            // [x-1,y]  клетка   [x+1,y]
+            //          [x,y+1]
+            // Добавляем соседние клетки в очередь
+            if (x > 1 && (info.enemy_ships.grid[x - 2][y - 1] == 'S' || info.enemy_ships.grid[x - 2][y - 1] == ' ')) //
+            {
+                target_queue.emplace_back(x - 1, y);
+            }
+            if (x < fieldSize && (info.enemy_ships.grid[x][y - 1] == 'S' || info.enemy_ships.grid[x][y - 1] == ' '))
+            {
+                target_queue.emplace_back(x + 1, y);
+            }
+            if (y > 1 && (info.enemy_ships.grid[x - 1][y - 2] == 'S' || info.enemy_ships.grid[x - 1][y - 2] == ' '))
+            {
+                target_queue.emplace_back(x, y - 1);
+            }
+            if (y < fieldSize && (info.enemy_ships.grid[x - 1][y] == 'S' || info.enemy_ships.grid[x - 1][y] == ' '))
+            {
+                target_queue.emplace_back(x, y + 1);
+            }
+        }
+        *first_shot = false; // первый выстрел был сделан
+
+        // Вывод отладочной информации
+        cout << "Компьютер атакует: (" << x << ", " << y << ")";
+        cout << " — Попадание!\n";
+
+        return 1;
+    }
+    else if (rezult.rezult_of_shot == 0)
+    {
+        // Вывод отладочной информации
+        cout << "Компьютер атакует: (" << x << ", " << y << ")";
+        cout << " — Промах.\n";
+
+        return 0;
+    }
+    else
+    {
+        cout << "Компьютер атакует: (" << x << ", " << y << ")";
+        cout << " — Уже стреляли.\n";
+        return -1;
+    }
 }
 
-void Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize, int* rezult_player, bool* first_shot,  Player* another_player, int* ship_sells, bool* win_player)
+int Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize, bool* first_shot,  Player* another_player, int* ship_sells, bool* win_player)
 {
+    PlayerResultOfShot rezult;
     SetCursor(*remember_x, *remember_y);
     int key;
     do
@@ -233,9 +318,7 @@ void Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize
             }
             break;
         case Enter:
-            PlayerResultOfShot rezult;
             rezult = (*another_player).info.my_ships.processShot(((*remember_x - 5 - 6 - fieldSize * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
-            *rezult_player = rezult.rezult_of_shot;
             info.enemy_ships.processShot(((*remember_x - 5 - 6 - fieldSize * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
 
             my_stat(rezult);
@@ -264,6 +347,7 @@ void Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize
             break;
         }
     } while (key != Enter);
+    return rezult.rezult_of_shot;
 }
 
 // вывод живых кораблей
