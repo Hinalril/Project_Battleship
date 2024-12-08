@@ -2,11 +2,21 @@
 
 HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE); //Дескриптор активного окна
 enum Napravlenie { Up = 72, Left = 75, Right = 77, Down = 80, Enter = 13, Tab = 9 };
+//enum Color { Black = 0, DarkBlue = 1, Green = 2, Blue = 3, Red = 4, Purple = 5, Yellow = 6, White = 7, Grey = 8, LightBlue = 9, LightGreen = 10 };
 
-Player::Player(string name, bool human, Board my_ships, Board enemy_ships, vector<ShipType> ships)
-    : info(name, human, my_ships, enemy_ships)
+PlayerStatistic::PlayerStatistic(int drawned_ships, int processed_shots, int sucessful_shots, int percent_suc_shots, vector<ShipType> ships)
+    : drawned_ships(drawned_ships), processed_shots(processed_shots), sucessful_shots(sucessful_shots), percent_suc_shots(percent_suc_shots) // вручную определим конструктор для структуры, чтобы можно было определять структуру с 4-мя аргументами в списке инициализации
 {
-    player_ships =
+    stat_dead_enemy_ships =
+    {
+        { "Submarine", 1, 0 },  // 1-палубный
+        { "Destroyer", 2, 0 },  // 2-палубный
+        { "Cruiser", 3, 0 },    // 3-палубный
+        { "Battleship", 4, 0}, // 4-палубный
+        { "Carrier", 5, 0 },   // 5-палубный
+        { "Flagship", 6, 0 }    // 6-палубный
+    };
+    stat_alive_enemy_ships =
     {
         { "Submarine", 1, ships[5].count },  // 1-палубный
         { "Destroyer", 2, ships[4].count },  // 2-палубный
@@ -15,9 +25,26 @@ Player::Player(string name, bool human, Board my_ships, Board enemy_ships, vecto
         { "Carrier", 5, ships[1].count },   // 5-палубный
         { "Flagship", 6, ships[0].count }    // 6-палубный
     };
-};
+    initial_ships = 
+    {
+        { "Submarine", 1, ships[5].count },  // 1-палубный
+        { "Destroyer", 2, ships[4].count },  // 2-палубный
+        { "Cruiser", 3, ships[3].count },    // 3-палубный
+        { "Battleship", 4, ships[2].count }, // 4-палубный
+        { "Carrier", 5, ships[1].count },   // 5-палубный
+        { "Flagship", 6, ships[0].count }    // 6-палубный
+    };
+}
 
-// Board::Board(int size, bool hide_ships) : size(size), grid(size, vector<char>(size, ' ')), hide_ships(hide_ships) {}
+PlayerStatistic::PlayerStatistic()
+: drawned_ships(0), processed_shots(0), sucessful_shots(0), percent_suc_shots(0) {} // компилятор требовал данный конструктор
+
+Player::Player(string name, bool human, Board my_ships, Board enemy_ships, vector<ShipType> ships)
+    : info(name, human, my_ships, enemy_ships), // Инициализация info
+    statistic(0, 0, 0, 0, ships) // Инициализация statistic
+{
+
+};
 
 void Player::SetCursor(int x, int y) //функция для того чтобы устанавливать позицию курсора в консоли по оси Х и Y
 {
@@ -25,7 +52,39 @@ void Player::SetCursor(int x, int y) //функция для того чтобы устанавливать пози
     SetConsoleCursorPosition(hStdOut, myCoords); //Способ перемещения курсора на нужные координаты
 }
 
-void Player::BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name)
+void Player::AutoBoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name, Player& another_player)
+{
+    srand(time(NULL));
+    pair<int, int> new_data;
+    for (int i = ships_player.size() - 1; i >= 0; i--)
+    {
+        for (int j = ships_player[i].count; j > 0; j--)
+        {
+            bool vertical = rand() % 2;
+            int x, y;
+            x = rand() % fieldSize;
+            y = rand() % fieldSize;
+            pair<int, int> new_data(x, y);
+            Ship new_ship(ships_player[i].name, ships_player[i].size, new_data, vertical);
+            if (info.my_ships.can_place_ship(new_ship))
+            {
+                another_player.info.enemy_ships.placeShip(new_ship);
+                info.my_ships.placeShip(new_ship);
+
+                /* код для теста : вывод данных на консоль
+                system("cls");
+                info.my_ships.display(false, info.my_ships);
+                */
+            }
+            else
+            {
+                j++; // Повторим попытку размещения для этого корабля
+            }
+        }
+    }
+}
+
+void Player::BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name, Player& another_player)
 {
     int remember_x = 5, remember_y = 3; // начальные координаты курсора
 
@@ -41,57 +100,77 @@ void Player::BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, st
             info.my_ships.display(false, info.my_ships);
             cout << "Расположите " << ships_player[i].name << " (размер " << ships_player[i].size << "):\n";
 
-            SetCursor(remember_x, remember_y);
             int key;
+            pair<int, int> new_data;
             do
             {
+                SetCursor(remember_x, remember_y);
                 key = _getch(); //функция возвращает номер нажатой клавиши
                 switch (key)
                 {
                 case Left:
                     if (remember_x > 5)
                     {
+                        SetCursor(0, 1);
+                        info.my_ships.display(false, info.my_ships);
                         remember_x = remember_x - 4;
                         SetCursor(remember_x, remember_y);
+                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
                     }
                     break;
                 case Right:
                     if (remember_x < 5 + fieldSize * 4 - 4)
                     {
+                        SetCursor(0, 1);
+                        info.my_ships.display(false, info.my_ships);
                         remember_x = remember_x + 4;
                         SetCursor(remember_x, remember_y);
+                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
                     }
                     break;
                 case Up:
                     if (remember_y > 3)
                     {
+                        SetCursor(0, 1);
+                        info.my_ships.display(false, info.my_ships);
                         remember_y = remember_y - 2;
                         SetCursor(remember_x, remember_y);
+                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
                     }
                     break;
                 case Down:
                     if (remember_y < 3 + fieldSize * 2 - 2)
                     {
+                        SetCursor(0, 1);
+                        info.my_ships.display(false, info.my_ships);
                         remember_y = remember_y + 2;
                         SetCursor(remember_x, remember_y);
+                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
                     }
                     break;
                 case Tab:
                     if (!vertical)
                     {
+                        SetCursor(0, 1);
+                        info.my_ships.display(false, info.my_ships);
                         vertical = true;
+                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
                     }
                     else
                     {
+                        SetCursor(0, 1);
+                        info.my_ships.display(false, info.my_ships);
                         vertical = false;
+                        paintFutureShip(remember_x, remember_y, ships_player[i], vertical);
                     }
                     break;
                 case Enter:
-                    pair<int, int> new_data((remember_x - 5) / 4, (remember_y - 3) / 2);
+                    new_data.first = (remember_x - 5) / 4;
+                    new_data.second = (remember_y - 3) / 2;
                     Ship new_ship(ships_player[i].name, ships_player[i].size, new_data, vertical);
                     if (info.my_ships.can_place_ship(new_ship))
                     {
-                        info.enemy_ships.placeShip(new_ship);
+                        another_player.info.enemy_ships.placeShip(new_ship);
                         info.my_ships.placeShip(new_ship);
                     }
                     else
@@ -109,6 +188,11 @@ void Player::BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, st
     cout << "Размещение кораблей завершено!\n";
     info.my_ships.display(false, info.my_ships);
     Sleep(2000);
+}
+
+void Player::Attack_computer()
+{
+
 }
 
 void Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize, int* rezult_player, bool* first_shot,  Player* another_player, int* ship_sells, bool* win_player)
@@ -149,10 +233,14 @@ void Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize
             }
             break;
         case Enter:
-            *rezult_player = (*another_player).info.my_ships.processShot(((*remember_x - 5 - 6 - fieldSize * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
+            PlayerResultOfShot rezult;
+            rezult = (*another_player).info.my_ships.processShot(((*remember_x - 5 - 6 - fieldSize * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
+            *rezult_player = rezult.rezult_of_shot;
             info.enemy_ships.processShot(((*remember_x - 5 - 6 - fieldSize * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
 
-            if (*rezult_player == 1)
+            my_stat(rezult);
+
+            if (rezult.rezult_of_shot == 1)
             {
                 (*ship_sells)--;
                 if (*ship_sells == 0)
@@ -165,12 +253,12 @@ void Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize
                 *first_shot = false; // первый выстрел был сделан
             }
 
-            if (*rezult_player == 0)
+            if (rezult.rezult_of_shot == 0)
             {
                 system("cls");
-                cout << "Информация полей боя для 1-го игрока.\n";
+                cout << "Информация полей боя для % игрока.\n";
                 info.my_ships.display(true, info.enemy_ships);
-                cout << "Промах. Ход переходит 2-му игроку!\n";
+                cout << "Промах. Ход переходит другому игроку!\n";
                 system("pause");
             }
             break;
@@ -179,8 +267,9 @@ void Player::Attack_manual(int* remember_x, int* remember_y, const int fieldSize
 }
 
 // вывод живых кораблей
-void output_ships(vector<ShipType> ships, vector<ShipType> ships_player, Board board)
+vector<ShipType> Player::CalcStatShips(vector<ShipType> ships, vector<ShipType> ships_player, vector<ShipType> initial_ships, Board board)
 {
+    ships_player = initial_ships;
     int number_board_ships = 0;
     for (int i = 0; i < ships.size(); i++)
     {
@@ -201,9 +290,98 @@ void output_ships(vector<ShipType> ships, vector<ShipType> ships_player, Board b
             number_board_ships++;
         }
     }
-    cout << "Живых кораблей противника:\n";
-    for (int i = 0; i < ships_player.size(); i++)
+
+    return ships_player;
+}
+
+void Player::paintFutureShip(int x, int y, ShipType ship_player, bool vertical)
+{
+    pair<int, int> new_data((x - 5) / 4, (y - 3) / 2);
+    Ship new_ship(ship_player.name, ship_player.size, new_data, vertical);
+    if (info.my_ships.can_place_ship(new_ship))
     {
-        cout << ships_player[i].name << ": " << ships_player[i].count << ".\n";
+        info.my_ships.display_ship_on_board(new_ship, x, y);
     }
+}
+
+void Player::my_stat(PlayerResultOfShot rezult)
+{
+    if (rezult.rezult_of_shot == 1) // если это успешное попадание
+    {
+        statistic.processed_shots++;
+        statistic.sucessful_shots++;
+        float suc_shot = statistic.sucessful_shots;
+        statistic.percent_suc_shots = static_cast <int>(100 * (suc_shot / statistic.processed_shots));
+    }
+    else if (rezult.rezult_of_shot == 0) // если это промах
+    {
+        statistic.processed_shots++;
+        float suc_shot = statistic.sucessful_shots;
+        statistic.percent_suc_shots = static_cast <int>(100 * (suc_shot / statistic.processed_shots));
+    }
+
+    if (rezult.rezult_ship.second == true)
+    {
+        statistic.stat_dead_enemy_ships[rezult.rezult_ship.first - 1].count++;
+        statistic.drawned_ships++;
+    }
+    statistic.stat_alive_enemy_ships = CalcStatShips(statistic.initial_ships, statistic.stat_alive_enemy_ships, statistic.initial_ships, info.enemy_ships);
+}
+
+
+
+void Player::output_stat(int fieldSize)
+{
+    info.my_ships.setColorWithBackground(2, 0);
+
+    const int tableWidth = 26;
+
+    // Функция для рисования горизонтальной линии
+    void (*draw_line)(int) = [](int width)
+        {
+            cout << "+" << string(width - 1, '-') << "+" << endl;
+        };
+
+    // Функция для вывода строки с данными
+    void (*print_row)(const string&, int, int, const PlayerInfo) = [](const string& label, int value, int width, PlayerInfo info)
+        {
+            cout << "| ";
+            info.my_ships.setColorWithBackground(3, 0);
+            cout << "    " << setw(width) << left << label;
+            cout << ": " << setw(3) << right << value << " ";
+            info.my_ships.setColorWithBackground(2, 0);
+            cout << " |" << endl;
+        };
+
+    draw_line(tableWidth);
+    cout << "|Живые корабли противника:|\n";
+    for (int i = 0; i < statistic.initial_ships.size(); i++)
+    {
+        print_row(statistic.stat_alive_enemy_ships[i].name, statistic.stat_alive_enemy_ships[i].count, tableWidth / 2, info);
+        //cout << right << setw(10) << statistic.stat_alive_enemy_ships[i].name << ": " << statistic.stat_alive_enemy_ships[i].count << ".\n";
+    }
+    draw_line(tableWidth);
+
+    SetCursor(tableWidth + 3, 3 + fieldSize * 2);
+    draw_line(tableWidth);
+    SetCursor(tableWidth + 3, 3 + fieldSize * 2 + 1);
+    cout << "| Уничтоженный противник :|\n";
+    for (int i = 0; i < statistic.initial_ships.size(); i++)
+    {
+        SetCursor(tableWidth + 3, 3 + fieldSize * 2 + i + 2);
+        print_row(statistic.stat_dead_enemy_ships[i].name, statistic.stat_dead_enemy_ships[i].count, tableWidth / 2, info);
+        //cout << right << setw(10) << statistic.stat_dead_enemy_ships[i].name << ": " << statistic.stat_dead_enemy_ships[i].count << ".\n";
+        if (i == statistic.initial_ships.size() - 1)
+        {
+            SetCursor(tableWidth + 3, 3 + fieldSize * 2 + i + 3);
+        }
+    }
+    draw_line(tableWidth);
+
+    info.my_ships.setColorWithBackground(3, 0);
+    cout << "    Количество потопленных кораблей: " << statistic.drawned_ships << ".\n";
+    cout << "    Количесво совершенных выстрелов: " << statistic.processed_shots << ".\n";
+    cout << "      Количество успешных попаданий: " << statistic.sucessful_shots << ".\n";
+    cout << "         Процент успешных попаданий: " << statistic.percent_suc_shots << ".\n";
+    info.my_ships.setColorWithBackground(7, 0);
 }

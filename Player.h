@@ -19,28 +19,47 @@ struct PlayerInfo
 		: name(""), human(false), my_ships(), enemy_ships() {} // компилятор требовал данный конструктор
 };
 
+struct PlayerStatistic
+{
+	int drawned_ships;      // количество потопленных кораблей
+	int processed_shots;    // количесво совершенных выстрелов
+	int sucessful_shots;    // количество успешных попаданий
+	int percent_suc_shots;  // процент успешных попаданий
+	vector<ShipType> stat_alive_enemy_ships;     // количество живых кораблей игрока противника
+	vector<ShipType> stat_dead_enemy_ships; // количество потопленных кораблей противника
+	vector<ShipType> initial_ships;    // количество кораблей до начала боя
+
+	PlayerStatistic(int x, int y, int z, int b, vector<ShipType> ships);
+
+	PlayerStatistic(); // компилятор требовал данный конструктор
+
+};
+
 class Player
 {
 private:
 
 
 public:
-
 	PlayerInfo info;
-	vector<ShipType> player_ships; // дополнительное поле
-
+	PlayerStatistic statistic;
+	
 	Player(string name, bool human, Board my_ships, Board enemy_ships, vector<ShipType> ships);  // Конструктор с параметрами
 
 	void SetCursor(int x, int y); //функция для того чтобы устанавливать позицию курсора в консоли по оси Х и Y
-	void BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name); // расположение кораблей по поле боя (ручное)
+	void AutoBoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name, Player& another_player);
+	void BoardShipPlacement(vector<ShipType> ships_player, int fieldSize, string name, Player& another_player); // расположение кораблей по поле боя (ручное)
 	void Attack_manual(int* remember_x, int* remember_y, const int fieldSize, int* rezult_player, bool* first_shot, Player* another_player, int* ship_sells, bool* win_player);
-	void output_ships(vector<ShipType> ships, vector<ShipType> ships_player, Board board);
-
+	void Attack_computer();
+	vector<ShipType> CalcStatShips(vector<ShipType> ships, vector<ShipType> ships_player, vector<ShipType> initial_ships, Board board);
+	void my_stat(PlayerResultOfShot rezult);
+	void paintFutureShip(int x, int y, ShipType ship_player, bool vertical);
+	void output_stat(int fieldSize);
 
 	~Player() = default; // Деструктор
 
 	/* нет:
-	* 1. рамещение кораблей на поле (автоматическое) - отдельный метод или после внедрить код в BoardShipPlacement
+	* 1. 
 	* 2. алгоритм атаки компьютерного игрока (ИИ)
 	* 3. ведение статистики игрока (например, через структуру): 1. количество потопленных кораблей
 								*								2. количесво совершенных выстрелов

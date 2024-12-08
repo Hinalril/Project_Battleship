@@ -186,8 +186,9 @@ int main()
 
     Player player1("Игрок 1", true, board_first_player_ally, board_second_player_ally, ships), player2("Игрок 2", true, board_second_player_ally, board_first_player_ally, ships);
 
-    player1.BoardShipPlacement(player1.player_ships, fieldSize, "Игрок 1");
-    player2.BoardShipPlacement(player2.player_ships, fieldSize, "Игрок 2");
+    player1.BoardShipPlacement(player1.statistic.stat_alive_enemy_ships, fieldSize, "Игрок 1", player2);
+    //player2.AutoBoardShipPlacement(player2.player_ships, fieldSize, "Игрок 2", player1);
+    player2.BoardShipPlacement(player2.statistic.stat_alive_enemy_ships, fieldSize, "Игрок 2", player1);
 
 
     bool win_first_player = false, win_second_player = false;
@@ -201,7 +202,10 @@ int main()
 
     while (!win_first_player && !win_second_player)
     {
-        int rezult_first_player = 1;
+        int rezult_first_player = 1; // int - результат попадания
+                                     // 1 - попадание
+                                     // 0 - промах
+                                     // -1 - клетка уже занята, повтор хода
         bool first_shot = true; // отслеживание первого выстрела в ходе игрока (если сделан первый выстрел, значит игрок может сделать 2-ой)
 
         // ходит игрок №1
@@ -210,7 +214,7 @@ int main()
             system("cls");
             cout << "Информация полей боя для 1-го игрока.\n";
             player1.info.my_ships.display(true, player1.info.enemy_ships);
-            player1.output_ships(ships, player1.player_ships, player2.info.my_ships);
+            player1.output_stat(fieldSize);
 
             if (rezult_first_player == 1 && first_shot == false)
             {
@@ -222,7 +226,6 @@ int main()
             }
 
             player1.Attack_manual(&remember_x_first_player, &remember_y_first_player, fieldSize, &rezult_first_player, &first_shot, &player2, &ship_sells_first_player, &win_first_player);
-
         }
 
         int rezult_second_player = 1;
@@ -234,7 +237,7 @@ int main()
             system("cls");
             cout << "Информация полей боя для 2-го игрока.\n";
             player2.info.my_ships.display(true, player2.info.enemy_ships);
-            output_ships(ships, player2.player_ships, player1.info.my_ships);
+            player2.output_stat(fieldSize);
 
             if (rezult_second_player == 1 && first_shot == false)
             {
@@ -246,7 +249,6 @@ int main()
             }
 
             player2.Attack_manual(&remember_x_second_player, &remember_y_second_player, fieldSize, &rezult_second_player, &first_shot, &player1, &ship_sells_second_player, &win_second_player);
-            
         }
     }
 
