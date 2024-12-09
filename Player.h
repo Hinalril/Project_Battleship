@@ -77,6 +77,7 @@ public:
 	void my_stat(PlayerResultOfShot rezult);
 	void paintFutureShip(int x, int y, ShipType ship_player, bool vertical);
 	void output_stat(int fieldSize);
+	bool check_zone(int x, int y, bool& horizontal, int& move, bool& move_minus);
 
 	~Player() = default; // Деструктор
 

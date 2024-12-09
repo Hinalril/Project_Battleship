@@ -199,18 +199,164 @@ void Player::BoardShipPlacement(string name, Player& another_player)
     Sleep(2000);
 }
 
+
+bool Player::check_zone(int x, int y, bool& horizontal, int& move, bool& move_minus)
+{
+    int min_size_ship = 1;
+    for (int i = 0; i < statistic.stat_alive_enemy_ships.size(); i++)
+    {
+        if (statistic.stat_alive_enemy_ships[i].count == 0)
+        {
+            min_size_ship++;
+        }
+        else
+        {
+            break;
+        }
+    }
+    if (min_size_ship == 1)
+    {
+        return false;
+    }
+
+    const int point = 1;
+    int right = 0, left = 0, up = 0, down = 0;
+    
+    int (*checkDirection)(PlayerInfo, int, int, int, int) = [](PlayerInfo info, int x, int y, int dx, int dy)
+        {
+            int counter = 0;
+            while (true)
+            {
+                int newX = x - 1 + dx * (counter + 1);
+                int newY = y - 1 + dy * (counter + 1);
+
+                if (newX >= 0 && newX < info.enemy_ships.size && newY >= 0 && newY < info.enemy_ships.size)
+                {
+                    if (info.enemy_ships.grid[newX][newY] != 'O' && info.enemy_ships.grid[newX][newY] != 'X')
+                    {
+                        counter++;
+                    }
+                    else
+                    {
+                        return counter;
+                    }
+                }
+                else
+                {
+                    return counter;
+                }
+            }
+        };
+
+    left = checkDirection(info, x, y, -1, 0);
+    right = checkDirection(info, x, y, 1, 0);
+    up = checkDirection(info, x, y, 0, -1);
+    down = checkDirection(info, x, y, 0, 1);
+
+    int in_a_row = point + right + left;
+    int in_a_column = point + up + down;
+
+    if (in_a_row >= min_size_ship || in_a_column >= min_size_ship)
+    {
+        if (in_a_row >= min_size_ship && in_a_column < min_size_ship)
+        {
+            if (left < min_size_ship)
+            {
+                move = min_size_ship - 1;
+                int i = 0;
+                while (true)
+                {
+                    i++;
+                    if (move >= in_a_row / 2 && move < min_size_ship)
+                    {
+                        move = min_size_ship - 1 - i;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                move_minus = false;
+            }
+            if (right < min_size_ship)
+            {
+                move = min_size_ship - 1;
+                int i = 0;
+                while (true)
+                {
+                    i++;
+                    if (move >= in_a_row / 2 && move < min_size_ship)
+                    {
+                        move = min_size_ship - 1 - i;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                move_minus = true;
+            }
+            horizontal = true;
+        }
+        else if (in_a_column >= min_size_ship)
+        {
+            if (up < min_size_ship)
+            {
+                move = min_size_ship - 1;
+                int i = 0;
+                while (true)
+                {
+                    i++;
+                    if (move >= in_a_row / 2 && move < min_size_ship)
+                    {
+                        move = min_size_ship - 1 - i;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                move_minus = false;
+            }
+            if (down < min_size_ship)
+            {
+                move = min_size_ship - 1;
+                int i = 0;
+                while (true)
+                {
+                    i++;
+                    if (move >= in_a_row / 2 && move < min_size_ship)
+                    {
+                        move = min_size_ship - 1 - i;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                move_minus = true;
+            }
+            horizontal = false;
+        }
+
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 void Player::Attack_computer(Player* another_player)
 {
     static bool target_mode = false;                  // Режим "уничтожение"
     static vector<pair<int, int>> target_queue;       // Очередь координат для атаки
     int fieldSize = info.enemy_ships.size;            // Размер игрового поля
 
-    random_device rd;                      // Источник случайных чисел
-    mt19937 generator(rd());               // Генератор псевдослучайных чисел
 
     if (!target_queue.empty())
     {
-        shuffle(target_queue.begin(), target_queue.end(), generator);
+        random_shuffle(target_queue.begin(), target_queue.end());
     }
 
     int x = 0, y = 0;                                 // Координаты выстрела
@@ -222,12 +368,47 @@ void Player::Attack_computer(Player* another_player)
     }
     else
     {
-        // Генерация случайных координат для выстрела
-        do
+        bool repeat = true;
+        bool horizontal = true;
+        int move = 0;
+        bool move_minus = true;
+        while (repeat)
         {
-            x = rand() % fieldSize + 1; // Координаты от 1 до fieldSize
-            y = rand() % fieldSize + 1;
-        } while (info.enemy_ships.grid[x - 1][y - 1] == 'O' || info.enemy_ships.grid[x - 1][y - 1] == 'X');
+            // Генерация случайных координат для выстрела
+            do
+            {
+                x = rand() % fieldSize + 1; // Координаты от 1 до fieldSize
+                y = rand() % fieldSize + 1;
+            } while (info.enemy_ships.grid[x - 1][y - 1] == 'O' || info.enemy_ships.grid[x - 1][y - 1] == 'X');
+            
+            repeat = check_zone(x, y, horizontal, move, move_minus);
+            if (move != 0)
+            {
+                if (move_minus)
+                {
+                    if (horizontal)
+                    {
+                        x = x - move;
+                    }
+                    else
+                    {
+                        y = y - move;
+                    }
+                }
+                else
+                {
+                    if (horizontal)
+                    {
+                        x = x + move;
+                    }
+                    else
+                    {
+                        y = y + move;
+                    }
+                }
+            }
+            
+        }
     }
 
     // Выполняем выстрел
