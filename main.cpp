@@ -188,8 +188,8 @@ int main()
     Player player2("Игрок 2", true, board_second_player_ally, board_first_player_ally, ships, remember_ship_sells);
 
     player1.BoardShipPlacement("Игрок 1", player2);
-    //player2.AutoBoardShipPlacement(player2.statistic.stat_alive_enemy_ships, fieldSize, "Игрок 2", player1);
-    player2.BoardShipPlacement("Игрок 2", player1);
+    player2.AutoBoardShipPlacement("Игрок 2", player1);
+    //player2.BoardShipPlacement("Игрок 2", player1);
 
     int remember_x_first_player = 5 + fieldSize * 4 + 6;
     int remember_y_first_player = 3;
@@ -227,7 +227,11 @@ int main()
 
         while ((player2.result_of_step.result_player == 1 || player2.result_of_step.result_player == -1) && !player2.result_of_step.win_player && !player1.result_of_step.win_player)
         {
+            //system("cls");
             player2.Attack_computer(&player1);
+            //player1.info.my_ships.display(true, player1.info.enemy_ships);
+            //player1.output_stat(fieldSize);
+            Sleep(2000);
         }
 
         /*

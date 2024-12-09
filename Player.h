@@ -2,6 +2,8 @@
 
 #include "Board.h"
 #include "Ship.h"
+#include <algorithm>
+#include <random>
 
 using namespace std;
 
@@ -43,6 +45,14 @@ struct PlayerResultOfStep
 
 	PlayerResultOfStep(bool win_player, int result_player, bool first_shot);
 	PlayerResultOfStep();
+};
+
+struct RandGenerator
+{
+	int operator()(int n)
+	{
+		return rand() % n;
+	}
 };
 
 class Player

@@ -205,6 +205,14 @@ void Player::Attack_computer(Player* another_player)
     static vector<pair<int, int>> target_queue;       // ќчередь координат дл€ атаки
     int fieldSize = info.enemy_ships.size;            // –азмер игрового пол€
 
+    random_device rd;                      // »сточник случайных чисел
+    mt19937 generator(rd());               // √енератор псевдослучайных чисел
+
+    if (!target_queue.empty())
+    {
+        shuffle(target_queue.begin(), target_queue.end(), generator);
+    }
+
     int x = 0, y = 0;                                 //  оординаты выстрела
     if (target_mode && !target_queue.empty())
     {
@@ -242,21 +250,116 @@ void Player::Attack_computer(Player* another_player)
             // [x-1,y]  клетка   [x+1,y]
             //          [x,y+1]
             // ƒобавл€ем соседние клетки в очередь
-            if (x > 1 && (info.enemy_ships.grid[x - 2][y - 1] == 'S' || info.enemy_ships.grid[x - 2][y - 1] == ' ')) //
+
+            bool shot_in_line = false;
+
+            // проверка на 2 попадани€ в линию:
+
+            //                          [x,y-1]
+            //    [x-2,y]   [x-1,y]=X      X      [x+1,y]
+            //                          [x,y+1]
+
+            int step_right = 0;
+            int step_left = 0;
+            int step_up = 0;
+            int step_down = 0;
+
+            while (true)
             {
-                target_queue.emplace_back(x - 1, y);
+                if (x - step_left > 1 && info.enemy_ships.grid[x - 2 - step_left][y - 1] == 'X') //
+                {
+                    step_left++; // количество X слева от текущей точки поражени€
+                }
+                else
+                {
+                    break;
+                }
             }
-            if (x < fieldSize && (info.enemy_ships.grid[x][y - 1] == 'S' || info.enemy_ships.grid[x][y - 1] == ' '))
+
+            while (true)
             {
-                target_queue.emplace_back(x + 1, y);
+                if (x + step_right < fieldSize && info.enemy_ships.grid[x + step_right][y - 1] == 'X')
+                {
+                    step_right++;
+                }
+                else
+                {
+                    break;
+                }
             }
-            if (y > 1 && (info.enemy_ships.grid[x - 1][y - 2] == 'S' || info.enemy_ships.grid[x - 1][y - 2] == ' '))
+
+            while (true)
             {
-                target_queue.emplace_back(x, y - 1);
+                if (y - step_up > 1 && info.enemy_ships.grid[x - 1][y - 2 - step_up] == 'X')
+                {
+                    step_up++; // количество X слева от текущей точки поражени€
+                }
+                else
+                {
+                    break;
+                }
             }
-            if (y < fieldSize && (info.enemy_ships.grid[x - 1][y] == 'S' || info.enemy_ships.grid[x - 1][y] == ' '))
+
+            while (true)
             {
-                target_queue.emplace_back(x, y + 1);
+                if (y + step_down < fieldSize && info.enemy_ships.grid[x - 1][y + step_down] == 'X')
+                {
+                    step_up++; // количество X слева от текущей точки поражени€
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (step_right > 0 || step_left > 0 || step_up > 0 || step_down > 0)
+            {
+                shot_in_line = true;
+            }
+
+
+            if (shot_in_line)
+            {
+                target_queue.clear();     // ќчищаем очередь
+                if (x - step_left - 1 >= 1 && step_up == 0 && step_down == 0)
+                {
+                    target_queue.emplace_back(x - 1 - step_left, y);
+                }
+                if (x + step_right + 1 < fieldSize && step_up == 0 && step_down == 0)
+                {
+                    target_queue.emplace_back(x + 1 + step_right, y);
+                }
+                if (y - step_up - 1 >= 1 && step_left == 0 && step_right == 0)
+                {
+                    target_queue.emplace_back(x, y - 1 - step_up);
+                }
+                if (y + 1 + step_down < fieldSize && step_left == 0 && step_right == 0)
+                {
+                    target_queue.emplace_back(x, y + 1 + step_down);
+                }
+
+            }
+
+
+            if (!shot_in_line)
+            {
+                // если нету 2 попаданий в линию:
+                if (x > 1 && (info.enemy_ships.grid[x - 2][y - 1] == 'S' || info.enemy_ships.grid[x - 2][y - 1] == ' ')) //
+                {
+                    target_queue.emplace_back(x - 1, y);
+                }
+                if (x < fieldSize && (info.enemy_ships.grid[x][y - 1] == 'S' || info.enemy_ships.grid[x][y - 1] == ' '))
+                {
+                    target_queue.emplace_back(x + 1, y);
+                }
+                if (y > 1 && (info.enemy_ships.grid[x - 1][y - 2] == 'S' || info.enemy_ships.grid[x - 1][y - 2] == ' '))
+                {
+                    target_queue.emplace_back(x, y - 1);
+                }
+                if (y < fieldSize && (info.enemy_ships.grid[x - 1][y] == 'S' || info.enemy_ships.grid[x - 1][y] == ' '))
+                {
+                    target_queue.emplace_back(x, y + 1);
+                }
             }
         }
         result_of_step.first_shot = true; // первый выстрел был сделан // данные не используютс€ дл€ компьютера
