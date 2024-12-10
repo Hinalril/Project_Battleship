@@ -10,8 +10,12 @@
 struct PlayerResultOfShot
 {
     int rezult_of_shot;
-    pair<int, bool> rezult_ship;
+    int size_of_ship;
+    bool ship_dead;
+    bool damage_more_one_square;
 
+    PlayerResultOfShot(int rezult_of_shot, int size_of_ship, bool ship_dead, bool damage_more_one_square);
+    PlayerResultOfShot();
 };
 
 //enum Color { Black = 0, DarkBlue = 1, Green = 2, Blue = 3, Red = 4, Purple = 5, Yellow = 6, White = 7, Grey = 8, LightBlue = 9, LightGreen = 10 };

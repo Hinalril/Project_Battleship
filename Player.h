@@ -40,10 +40,10 @@ struct PlayerStatistic
 struct PlayerResultOfStep
 {
 	bool win_player;
-	int result_player;
-	bool first_shot;
+	bool in_a_row;
+	PlayerResultOfShot result_shot;
 
-	PlayerResultOfStep(bool win_player, int result_player, bool first_shot);
+	PlayerResultOfStep(bool win_player, bool in_a_row, PlayerResultOfShot result_shot);
 	PlayerResultOfStep();
 };
 
@@ -64,6 +64,7 @@ public:
 	PlayerInfo info;
 	PlayerStatistic statistic;
 	PlayerResultOfStep result_of_step;
+	COORD coords;
 	int ship_sells;
 	
 	Player(string name, bool human, Board my_ships, Board enemy_ships, vector<ShipType> ships, int ship_sells);  // Конструктор с параметрами
@@ -71,15 +72,13 @@ public:
 	void SetCursor(int x, int y); //функция для того чтобы устанавливать позицию курсора в консоли по оси Х и Y
 	void AutoBoardShipPlacement(string name, Player& another_player);
 	void BoardShipPlacement(string name, Player& another_player); // расположение кораблей по поле боя (ручное)
-	void Attack_manual(int* remember_x, int* remember_y, Player* another_player);
+	void Attack_manual(Player* another_player);
 	void Attack_computer(Player* another_player);
 	vector<ShipType> CalcStatShips(vector<ShipType> ships, vector<ShipType> ships_player, vector<ShipType> initial_ships, Board board);
 	void my_stat(PlayerResultOfShot rezult);
 	void paintFutureShip(int x, int y, ShipType ship_player, bool vertical);
-	void output_stat(int fieldSize);
+	void output_stat(int fieldSize, int y);
 	bool check_zone(int x, int y, bool& horizontal, int& move, bool& move_minus);
 
 	~Player() = default; // Деструктор
-
-	// ИИ глупый - доделать
 };

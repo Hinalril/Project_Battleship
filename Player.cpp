@@ -2,6 +2,7 @@
 
 HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE); //Дескриптор активного окна
 enum Napravlenie { Up = 72, Left = 75, Right = 77, Down = 80, Enter = 13, Tab = 9 };
+const int pause_duration = 0;
 //enum Color { Black = 0, DarkBlue = 1, Green = 2, Blue = 3, Red = 4, Purple = 5, Yellow = 6, White = 7, Grey = 8, LightBlue = 9, LightGreen = 10 };
 
 PlayerStatistic::PlayerStatistic(int drawned_ships, int processed_shots, int sucessful_shots, int percent_suc_shots, vector<ShipType> ships)
@@ -40,19 +41,20 @@ PlayerStatistic::PlayerStatistic()
 : drawned_ships(0), processed_shots(0), sucessful_shots(0), percent_suc_shots(0) {} // компилятор требовал данный конструктор
 
 
-PlayerResultOfStep::PlayerResultOfStep(bool win_player, int result_player, bool first_shot)
-    :win_player(win_player), result_player(result_player), first_shot(first_shot){};
+PlayerResultOfStep::PlayerResultOfStep(bool win_player, bool in_a_row, PlayerResultOfShot result_shot)
+    :win_player(win_player), in_a_row(in_a_row),result_shot(result_shot){};
 
 PlayerResultOfStep::PlayerResultOfStep()
-    :win_player(false), result_player(1), first_shot(true) {};
+    :win_player(false), in_a_row(false), result_shot(PlayerResultOfShot(0,0,0,0)){};
 
 Player::Player(string name, bool human, Board my_ships, Board enemy_ships, vector<ShipType> ships, int ship_sells)
     : info(name, human, my_ships, enemy_ships), // Инициализация info
     statistic(0, 0, 0, 0, ships), // Инициализация statistic
-    result_of_step(false, 1, true), // Инициализация result_of_step
+    result_of_step(false, false, PlayerResultOfShot(1,0,true, false)), // Инициализация result_of_step
     ship_sells(ship_sells)
 {
-
+    coords.X = 5 + info.enemy_ships.size * 4 + 6;
+    coords.Y = 3;
 };
 
 void Player::SetCursor(int x, int y) //функция для того чтобы устанавливать позицию курсора в консоли по оси Х и Y
@@ -196,7 +198,7 @@ void Player::BoardShipPlacement(string name, Player& another_player)
     system("cls");
     cout << "Размещение кораблей завершено!\n";
     info.my_ships.display(false, info.my_ships);
-    Sleep(2000);
+    Sleep(pause_duration);
 }
 
 
@@ -353,7 +355,6 @@ void Player::Attack_computer(Player* another_player)
     static vector<pair<int, int>> target_queue;       // Очередь координат для атаки
     int fieldSize = info.enemy_ships.size;            // Размер игрового поля
 
-
     if (!target_queue.empty())
     {
         random_shuffle(target_queue.begin(), target_queue.end());
@@ -380,7 +381,7 @@ void Player::Attack_computer(Player* another_player)
                 x = rand() % fieldSize + 1; // Координаты от 1 до fieldSize
                 y = rand() % fieldSize + 1;
             } while (info.enemy_ships.grid[x - 1][y - 1] == 'O' || info.enemy_ships.grid[x - 1][y - 1] == 'X');
-            
+
             repeat = check_zone(x, y, horizontal, move, move_minus);
             if (move != 0)
             {
@@ -407,19 +408,31 @@ void Player::Attack_computer(Player* another_player)
                     }
                 }
             }
-            
+
         }
     }
+    coords.X = x;
+    coords.Y = y;
 
-    // Выполняем выстрел
-    PlayerResultOfShot rezult = (*another_player).info.my_ships.processShot(x, y);
+    PlayerResultOfShot rezult = (*another_player).info.my_ships.processShot(x, y); // Выполняем выстрел
     info.enemy_ships.processShot(x, y);
+    result_of_step.result_shot = rezult;
 
     my_stat(rezult);
 
     if (rezult.rezult_of_shot == 1) // Попадание
     {
-        if (rezult.rezult_ship.second) // Уничтожение корабля
+        ship_sells--;
+        if (ship_sells == 0)
+        {
+            result_of_step.win_player = true;
+        }
+
+        if (result_of_step.result_shot.damage_more_one_square == true && result_of_step.result_shot.ship_dead == false)
+        {
+            target_queue.clear();
+        }
+        if (rezult.ship_dead) // Уничтожение корабля
         {
             target_mode = false;      // Сбрасываем режим уничтожения
             target_queue.clear();     // Очищаем очередь
@@ -440,58 +453,28 @@ void Player::Attack_computer(Player* another_player)
             //    [x-2,y]   [x-1,y]=X      X      [x+1,y]
             //                          [x,y+1]
 
-            int step_right = 0;
-            int step_left = 0;
-            int step_up = 0;
-            int step_down = 0;
+            int (*countSteps)(int, int, int, int, int, PlayerInfo) = [](int x, int y, int fieldSize, int step, int direction, PlayerInfo info)
+                {
+                    while (true)
+                    {
+                        if (direction == 0 && x - step > 1 && info.enemy_ships.grid[x - 2 - step][y - 1] == 'X') // Влево
+                            step++;
+                        else if (direction == 1 && x + step < fieldSize && info.enemy_ships.grid[x + step][y - 1] == 'X') // Вправо
+                            step++;
+                        else if (direction == 2 && y - step > 1 && info.enemy_ships.grid[x - 1][y - 2 - step] == 'X') // Вверх
+                            step++;
+                        else if (direction == 3 && y + step < fieldSize && info.enemy_ships.grid[x - 1][y + step] == 'X') // Вниз
+                            step++;
+                        else
+                            break;
+                    }
+                    return step;
+                };
 
-            while (true)
-            {
-                if (x - step_left > 1 && info.enemy_ships.grid[x - 2 - step_left][y - 1] == 'X') //
-                {
-                    step_left++; // количество X слева от текущей точки поражения
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            while (true)
-            {
-                if (x + step_right < fieldSize && info.enemy_ships.grid[x + step_right][y - 1] == 'X')
-                {
-                    step_right++;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            while (true)
-            {
-                if (y - step_up > 1 && info.enemy_ships.grid[x - 1][y - 2 - step_up] == 'X')
-                {
-                    step_up++; // количество X слева от текущей точки поражения
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            while (true)
-            {
-                if (y + step_down < fieldSize && info.enemy_ships.grid[x - 1][y + step_down] == 'X')
-                {
-                    step_up++; // количество X слева от текущей точки поражения
-                }
-                else
-                {
-                    break;
-                }
-            }
+            int step_left = countSteps(x, y, fieldSize, 0, 0, info);  // 0 - влево
+            int step_right = countSteps(x, y, fieldSize, 0, 1, info); // 1 - вправо
+            int step_up = countSteps(x, y, fieldSize, 0, 2, info);    // 2 - вверх
+            int step_down = countSteps(x, y, fieldSize, 0, 3, info);  // 3 - вниз
 
             if (step_right > 0 || step_left > 0 || step_up > 0 || step_down > 0)
             {
@@ -504,27 +487,37 @@ void Player::Attack_computer(Player* another_player)
                 target_queue.clear();     // Очищаем очередь
                 if (x - step_left - 1 >= 1 && step_up == 0 && step_down == 0)
                 {
-                    target_queue.emplace_back(x - 1 - step_left, y);
+                    if (info.enemy_ships.grid[x - 2 - step_left][y - 1] == 'S' || info.enemy_ships.grid[x - 2 - step_left][y - 1] == ' ')
+                    {
+                        target_queue.emplace_back(x - 1 - step_left, y);
+                    }
                 }
                 if (x + step_right + 1 < fieldSize && step_up == 0 && step_down == 0)
                 {
-                    target_queue.emplace_back(x + 1 + step_right, y);
+                    if (info.enemy_ships.grid[x + step_right][y - 1] == 'S' || info.enemy_ships.grid[x + step_right][y - 1] == ' ')
+                    {
+                        target_queue.emplace_back(x + 1 + step_right, y);
+                    }
                 }
                 if (y - step_up - 1 >= 1 && step_left == 0 && step_right == 0)
                 {
-                    target_queue.emplace_back(x, y - 1 - step_up);
+                    if (info.enemy_ships.grid[x - 1][y - 2 - step_up] == 'S' || info.enemy_ships.grid[x - 1][y - 2 - step_up] == ' ')
+                    {
+                        target_queue.emplace_back(x, y - 1 - step_up);
+                    }
                 }
                 if (y + 1 + step_down < fieldSize && step_left == 0 && step_right == 0)
                 {
-                    target_queue.emplace_back(x, y + 1 + step_down);
+                    if (info.enemy_ships.grid[x - 1][y + step_down] == 'S' || info.enemy_ships.grid[x - 1][y + step_down] == ' ')
+                    {
+                        target_queue.emplace_back(x, y + 1 + step_down);
+                    }
                 }
 
             }
 
-
-            if (!shot_in_line)
+            if (!shot_in_line) // если нету 2 попаданий в линию:
             {
-                // если нету 2 попаданий в линию:
                 if (x > 1 && (info.enemy_ships.grid[x - 2][y - 1] == 'S' || info.enemy_ships.grid[x - 2][y - 1] == ' ')) //
                 {
                     target_queue.emplace_back(x - 1, y);
@@ -543,39 +536,26 @@ void Player::Attack_computer(Player* another_player)
                 }
             }
         }
-        result_of_step.first_shot = true; // первый выстрел был сделан // данные не используются для компьютера
-
-        // Вывод отладочной информации
-        cout << "Компьютер атакует: (" << x << ", " << y << ")";
-        cout << " — Попадание!\n";
+        result_of_step.in_a_row = true; // попал, первый выстрел in a row
         
-        result_of_step.result_player = 1;
         return ;
     }
     else if (rezult.rezult_of_shot == 0)
     {
-        // Вывод отладочной информации
-        cout << "Компьютер атакует: (" << x << ", " << y << ")";
-        cout << " — Промах.\n";
-
-        result_of_step.result_player = 0;
+        result_of_step.in_a_row = false; // прерывание череды выстрелов
         return ;
     }
     else
     {
-        // Вывод отладочной информации
-        cout << "Компьютер атакует: (" << x << ", " << y << ")";
-        cout << " — Уже стреляли.\n";
-
-        result_of_step.result_player = -1;
+        result_of_step.in_a_row = false; // прерывание череды выстрелов
         return ;
     }
 }
 
-void Player::Attack_manual(int* remember_x, int* remember_y, Player* another_player)
+void Player::Attack_manual(Player* another_player)
 {
     PlayerResultOfShot rezult_shot;
-    SetCursor(*remember_x, *remember_y);
+    SetCursor(coords.X, coords.Y);
     int key;
     do
     {
@@ -583,37 +563,39 @@ void Player::Attack_manual(int* remember_x, int* remember_y, Player* another_pla
         switch (key)
         {
         case Left:
-            if (*remember_x > 5 + info.my_ships.size * 4 + 6)
+            if (coords.X > 5 + info.my_ships.size * 4 + 6)
             {
-                *remember_x = *remember_x - 4;
-                SetCursor(*remember_x, *remember_y);
+                coords.X = coords.X - 4;
+                SetCursor(coords.X, coords.Y);
             }
             break;
         case Right:
-            if (*remember_x < 5 + info.my_ships.size * 4 + 6 + info.my_ships.size * 4 - 4)
+            if (coords.X < 5 + info.my_ships.size * 4 + 6 + info.my_ships.size * 4 - 4)
             {
-                *remember_x = *remember_x + 4;
-                SetCursor(*remember_x, *remember_y);
+                coords.X = coords.X + 4;
+                SetCursor(coords.X, coords.Y);
             }
             break;
         case Up:
-            if (*remember_y > 3)
+            if (coords.Y > 3)
             {
-                *remember_y = *remember_y - 2;
-                SetCursor(*remember_x, *remember_y);
+                coords.Y = coords.Y - 2;
+                SetCursor(coords.X, coords.Y);
             }
             break;
         case Down:
-            if (*remember_y < 3 + info.my_ships.size * 2 - 2)
+            if (coords.Y < 3 + info.my_ships.size * 2 - 2)
             {
-                *remember_y = *remember_y + 2;
-                SetCursor(*remember_x, *remember_y);
+                coords.Y = coords.Y + 2;
+                SetCursor(coords.X, coords.Y);
             }
             break;
         case Enter:
-            rezult_shot = (*another_player).info.my_ships.processShot(((*remember_x - 5 - 6 - info.my_ships.size * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
-            info.enemy_ships.processShot(((*remember_x - 5 - 6 - info.my_ships.size * 4) / 4) + 1, ((*remember_y - 3) / 2) + 1);
-            result_of_step.result_player = rezult_shot.rezult_of_shot;
+            rezult_shot = (*another_player).info.my_ships.processShot(((coords.X - 5 - 6 - info.my_ships.size * 4) / 4) + 1, ((coords.Y - 3) / 2) + 1);
+            info.enemy_ships.processShot(((coords.X - 5 - 6 - info.my_ships.size * 4) / 4) + 1, ((coords.Y - 3) / 2) + 1);
+            result_of_step.result_shot = rezult_shot;
+
+            info.my_ships.display(true, info.enemy_ships);
 
             my_stat(rezult_shot);
 
@@ -622,21 +604,22 @@ void Player::Attack_manual(int* remember_x, int* remember_y, Player* another_pla
                 ship_sells--;
                 if (ship_sells == 0)
                 {
-                    system("cls");
-                    info.my_ships.display(true, info.enemy_ships);
                     result_of_step.win_player = true;
                     break;
                 }
-                result_of_step.first_shot = true; // первый выстрел был сделан
+                result_of_step.in_a_row = true; // попадание
             }
-
-            if (rezult_shot.rezult_of_shot == 0)
+            else if (rezult_shot.rezult_of_shot == 0)
             {
-                system("cls");
-                cout << "Информация полей боя для % игрока.\n";
-                info.my_ships.display(true, info.enemy_ships);
-                cout << "Промах. Ход переходит другому игроку!\n";
-                system("pause");
+
+                Sleep(pause_duration);
+                result_of_step.in_a_row = false; // промах
+            }
+            else if (rezult_shot.rezult_of_shot == -1)
+            {
+
+                Sleep(pause_duration);
+                result_of_step.in_a_row = false; // промах
             }
             break;
         }
@@ -697,19 +680,19 @@ void Player::my_stat(PlayerResultOfShot rezult)
         statistic.percent_suc_shots = static_cast <int>(100 * (suc_shot / statistic.processed_shots));
     }
 
-    if (rezult.rezult_ship.second == true)
+    if (rezult.ship_dead == true)
     {
-        statistic.stat_dead_enemy_ships[rezult.rezult_ship.first - 1].count++;
+        statistic.stat_dead_enemy_ships[rezult.size_of_ship - 1].count++;
         statistic.drawned_ships++;
     }
     statistic.stat_alive_enemy_ships = CalcStatShips(statistic.initial_ships, statistic.stat_alive_enemy_ships, statistic.initial_ships, info.enemy_ships);
 }
 
-void Player::output_stat(int fieldSize)
+void Player::output_stat(int fieldSize,int y)
 {
-    info.my_ships.setColorWithBackground(2, 0);
+    const int tabel_width = 26;
 
-    const int tableWidth = 26;
+    info.my_ships.setColorWithBackground(2, 0);
 
     // Функция для рисования горизонтальной линии
     void (*draw_line)(int) = [](int width)
@@ -728,35 +711,35 @@ void Player::output_stat(int fieldSize)
             cout << " |" << endl;
         };
 
-    draw_line(tableWidth);
+    draw_line(tabel_width);
     cout << "|Живые корабли противника:|\n";
     for (int i = 0; i < statistic.initial_ships.size(); i++)
     {
-        print_row(statistic.stat_alive_enemy_ships[i].name, statistic.stat_alive_enemy_ships[i].count, tableWidth / 2, info);
+        print_row(statistic.stat_alive_enemy_ships[i].name, statistic.stat_alive_enemy_ships[i].count, tabel_width / 2, info);
         //cout << right << setw(10) << statistic.stat_alive_enemy_ships[i].name << ": " << statistic.stat_alive_enemy_ships[i].count << ".\n";
     }
-    draw_line(tableWidth);
+    draw_line(tabel_width);
 
-    SetCursor(tableWidth + 3, 3 + fieldSize * 2);
-    draw_line(tableWidth);
-    SetCursor(tableWidth + 3, 3 + fieldSize * 2 + 1);
+    SetCursor(tabel_width + 3, y);
+    draw_line(tabel_width);
+    SetCursor(tabel_width + 3, y + 1);
     cout << "| Уничтоженный противник :|\n";
     for (int i = 0; i < statistic.initial_ships.size(); i++)
     {
-        SetCursor(tableWidth + 3, 3 + fieldSize * 2 + i + 2);
-        print_row(statistic.stat_dead_enemy_ships[i].name, statistic.stat_dead_enemy_ships[i].count, tableWidth / 2, info);
+        SetCursor(tabel_width + 3, y + i + 2);
+        print_row(statistic.stat_dead_enemy_ships[i].name, statistic.stat_dead_enemy_ships[i].count, tabel_width / 2, info);
         //cout << right << setw(10) << statistic.stat_dead_enemy_ships[i].name << ": " << statistic.stat_dead_enemy_ships[i].count << ".\n";
         if (i == statistic.initial_ships.size() - 1)
         {
-            SetCursor(tableWidth + 3, 3 + fieldSize * 2 + i + 3);
+            SetCursor(tabel_width + 3, y + i + 3);
         }
     }
-    draw_line(tableWidth);
+    draw_line(tabel_width);
 
     info.my_ships.setColorWithBackground(3, 0);
     cout << "    Количество потопленных кораблей: " << statistic.drawned_ships << ".\n";
     cout << "    Количесво совершенных выстрелов: " << statistic.processed_shots << ".\n";
     cout << "      Количество успешных попаданий: " << statistic.sucessful_shots << ".\n";
-    cout << "         Процент успешных попаданий: " << statistic.percent_suc_shots << ".\n";
+    cout << "         Процент успешных попаданий: " << statistic.percent_suc_shots << "%.\n";
     info.my_ships.setColorWithBackground(7, 0);
 }

@@ -10,6 +10,12 @@ void Board::setColorWithBackground(int textColor, int backgroundColor)
     SetConsoleTextAttribute(hConsole, color);
 }
 
+PlayerResultOfShot::PlayerResultOfShot(int rezult_of_shot, int size_of_ship, bool ship_dead, bool damage_more_one_square)
+    :rezult_of_shot(rezult_of_shot), size_of_ship(size_of_ship), ship_dead(ship_dead), damage_more_one_square(damage_more_one_square){};
+
+PlayerResultOfShot::PlayerResultOfShot()
+    :rezult_of_shot(0), size_of_ship(0), ship_dead(false), damage_more_one_square(false) {};
+
 // Определение конструктора
 Board::Board(int size, bool hide_ships)
     : size(size), grid(size, vector<char>(size, ' ')), hide_ships(hide_ships) {}
@@ -30,12 +36,9 @@ void Board::placeShip(const Ship& ship)
 // Обработка выстрела
 PlayerResultOfShot Board::processShot(int x, int y)
 {
-    PlayerResultOfShot rezult;
-    //rezult.rezult_ship.first(int) и .second(bool) // int - результат попадания, bool - живой ли корабль
-                                                    // 1 - попадание
-                                                    // 0 - промах
-                                                    // -1 - клетка уже занята, повтор хода
-    rezult.rezult_ship.second = false;
+    PlayerResultOfShot rezult(0,0,false, false);
+    rezult.ship_dead = 0;
+
     x--;
     y--;
     bool found = false;
@@ -47,11 +50,24 @@ PlayerResultOfShot Board::processShot(int x, int y)
             found = ship.takeHit(x, y);
             if (found)
             {
+                if (ship.hits >= 2)
+                {
+                    rezult.damage_more_one_square = true;
+                }
+                else
+                {
+                    rezult.damage_more_one_square = false;
+                }
+
                 if (ship.isSunk())
                 {
-                    rezult.rezult_ship.first = ship.getSize();
-                    rezult.rezult_ship.second = true;
+                    rezult.size_of_ship = ship.getSize();
+                    rezult.ship_dead = true;
                     placeDeadField(ship);
+                }
+                else
+                {
+                    rezult.ship_dead = false;
                 }
                 break;
             }
@@ -109,6 +125,7 @@ void Board::placeDeadField(const Ship& ship)
 // Отображение поля
 void Board::display(bool second_battlefield, const Board& second_board)
 {
+    SetCursor(0, 1);
     // Печать верхней границы таблицы
     cout << "    ";  // Отступ перед номерами столбцов
     for (int i = 0; i < size; ++i)
