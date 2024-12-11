@@ -10,15 +10,14 @@ using namespace std;
 struct PlayerInfo
 {
 	string name;
-	bool human;
 	Board my_ships;
 	Board enemy_ships;
 
-	PlayerInfo(string n, bool h, Board my, Board enemy)
-		: name(n), human(h), my_ships(my), enemy_ships(enemy) {} // вручную определим конструктор для структуры, чтобы можно было определять структуру с 4-мя аргументами в списке инициализации
+	PlayerInfo(string n, Board my, Board enemy)
+		: name(n), my_ships(my), enemy_ships(enemy) {} // вручную определим конструктор для структуры, чтобы можно было определять структуру с 4-мя аргументами в списке инициализации
 
 	PlayerInfo()
-		: name(""), human(false), my_ships(), enemy_ships() {} // компилятор требовал данный конструктор
+		: name(""), my_ships(), enemy_ships() {} // компилятор требовал данный конструктор
 };
 
 struct PlayerStatistic
@@ -67,7 +66,7 @@ public:
 	COORD coords;
 	int ship_sells;
 	
-	Player(string name, bool human, Board my_ships, Board enemy_ships, vector<ShipType> ships, int ship_sells);  // Конструктор с параметрами
+	Player(string name, Board my_ships, Board enemy_ships, vector<ShipType> ships, int ship_sells);  // Конструктор с параметрами
 
 	void SetCursor(int x, int y); //функция для того чтобы устанавливать позицию курсора в консоли по оси Х и Y
 	void AutoBoardShipPlacement(string name, Player& another_player);

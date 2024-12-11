@@ -47,8 +47,8 @@ PlayerResultOfStep::PlayerResultOfStep(bool win_player, bool in_a_row, PlayerRes
 PlayerResultOfStep::PlayerResultOfStep()
     :win_player(false), in_a_row(false), result_shot(PlayerResultOfShot(0,0,0,0)){};
 
-Player::Player(string name, bool human, Board my_ships, Board enemy_ships, vector<ShipType> ships, int ship_sells)
-    : info(name, human, my_ships, enemy_ships), // Инициализация info
+Player::Player(string name, Board my_ships, Board enemy_ships, vector<ShipType> ships, int ship_sells)
+    : info(name, my_ships, enemy_ships), // Инициализация info
     statistic(0, 0, 0, 0, ships), // Инициализация statistic
     result_of_step(false, false, PlayerResultOfShot(1,0,true, false)), // Инициализация result_of_step
     ship_sells(ship_sells)
@@ -75,17 +75,12 @@ void Player::AutoBoardShipPlacement(string name, Player& another_player)
             int x, y;
             x = rand() % info.my_ships.size;
             y = rand() % info.my_ships.size;
-            pair<int, int> new_data(x, y);
+            COORD new_data = { x, y };
             Ship new_ship(statistic.stat_alive_enemy_ships[i].name, statistic.stat_alive_enemy_ships[i].size, new_data, vertical);
             if (info.my_ships.can_place_ship(new_ship))
             {
                 another_player.info.enemy_ships.placeShip(new_ship);
                 info.my_ships.placeShip(new_ship);
-
-                /* код для теста : вывод данных на консоль
-                system("cls");
-                info.my_ships.display(false, info.my_ships);
-                */
             }
             else
             {
@@ -112,7 +107,7 @@ void Player::BoardShipPlacement(string name, Player& another_player)
             cout << "Расположите " << statistic.stat_alive_enemy_ships[i].name << " (размер " << statistic.stat_alive_enemy_ships[i].size << "):\n";
 
             int key;
-            pair<int, int> new_data;
+            COORD new_data;
             do
             {
                 SetCursor(remember_x, remember_y);
@@ -176,8 +171,8 @@ void Player::BoardShipPlacement(string name, Player& another_player)
                     }
                     break;
                 case Enter:
-                    new_data.first = (remember_x - 5) / 4;
-                    new_data.second = (remember_y - 3) / 2;
+                    new_data.X = (remember_x - 5) / 4;
+                    new_data.Y = (remember_y - 3) / 2;
                     Ship new_ship(statistic.stat_alive_enemy_ships[i].name, statistic.stat_alive_enemy_ships[i].size, new_data, vertical);
                     if (info.my_ships.can_place_ship(new_ship))
                     {
@@ -656,7 +651,7 @@ vector<ShipType> Player::CalcStatShips(vector<ShipType> ships, vector<ShipType> 
 
 void Player::paintFutureShip(int x, int y, ShipType ship_player, bool vertical)
 {
-    pair<int, int> new_data((x - 5) / 4, (y - 3) / 2);
+    COORD new_data = { (x - 5) / 4, (y - 3) / 2 };
     Ship new_ship(ship_player.name, ship_player.size, new_data, vertical);
     if (info.my_ships.can_place_ship(new_ship))
     {

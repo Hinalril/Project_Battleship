@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <windows.h>
 
 using namespace std;
 
@@ -29,7 +30,7 @@ public:
     bool getDirection() const { return is_vertical; }
 
 
-    Ship(string name, int size, pair<int, int> start, bool is_vertical); // конструктор корабля
+    Ship(string name, int size, COORD start, bool is_vertical); // конструктор корабля
     bool isSunk() const;
     int statusShip() const;
     bool takeHit(int x, int y);

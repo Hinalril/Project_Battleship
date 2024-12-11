@@ -2,7 +2,7 @@
 #include "Ship.h"
 
 // Конструктор
-Ship::Ship(string name, int size, pair<int, int> start, bool is_vertical) : name(name), size(size), is_vertical(is_vertical), hits(0)
+Ship::Ship(string name, int size, COORD start, bool is_vertical) : name(name), size(size), is_vertical(is_vertical), hits(0)
 {
     // Рассчитываем координаты корабля
     for (int i = 0; i < size; i++)
@@ -10,11 +10,11 @@ Ship::Ship(string name, int size, pair<int, int> start, bool is_vertical) : name
         status_coordinates.push_back(true);
         if (!is_vertical)
         {
-            coordinates.emplace_back(start.first + i, start.second);
+            coordinates.emplace_back(start.X + i, start.Y);
         }
         else
         {
-            coordinates.emplace_back(start.first, start.second + i);
+            coordinates.emplace_back(start.X, start.Y + i);
         }
     }
 }

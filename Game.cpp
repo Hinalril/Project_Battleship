@@ -6,19 +6,18 @@ Game::Game(string name1, string name2)
 
 void Game::clearPartOfConsole(int startLine, int endLine)
 {
-    // Переместить курсор к начальной строке
-    cout << "\033[" << startLine << ";0H";
+    cout << "\033[" << startLine << ";0H";     // Переместить курсор к начальной строке
 
     // Очистить каждую строку в указанном диапазоне
-    for (int i = startLine; i <= endLine; ++i) {
+    for (int i = startLine; i <= endLine; i++)
+    {
         cout << "\033[K"; // Очистить текущую строку
-        if (i != endLine) {
+        if (i != endLine)
+        {
             cout << "\033[E"; // Перейти на следующую строку
         }
     }
-
-    // Вернуть курсор к первой очищенной строке
-    cout << "\033[" << startLine << ";0H";
+    cout << "\033[" << startLine << ";0H";     // Вернуть курсор к первой очищенной строке
 }
 
 void Game::scroll_log(int lines)
@@ -259,8 +258,14 @@ int Game::info_players(Player player1, Player player2)
     return 0; // чья-то победа, прекращение ходов if (player1.result_of_step.win_player || player2.result_of_step.win_player)
 }
 
-void Game::cycle_play(Player& player1, Player& player2, bool computer)
+void Game::cycle_play(Player& player1, Player& player2, bool person1, bool person2)
 {
+    bool only_comp = false;
+    if (person1 == false && person2 == false)
+    {
+        only_comp = true;
+    }
+
     while (check_status(player1, player2))
     {
         int turn = info_players(player1, player2);
@@ -268,10 +273,10 @@ void Game::cycle_play(Player& player1, Player& player2, bool computer)
         switch (turn)
         {
         case 1:
-            process_steps(player1, player2, false);
+            process_steps(player1, player2, person1, only_comp);
             break;
         case 2:
-            process_steps(player2, player1, computer);
+            process_steps(player2, player1, person2, only_comp);
             break;
         case 0:
             break;
@@ -285,23 +290,23 @@ void Game::cycle_play(Player& player1, Player& player2, bool computer)
 void Game::output_finish_info(Player player1, Player player2)
 {
     system("cls");
-    cout << "Информация полей боя для 1-го игрока.\n";
+    cout << "Информация полей боя для игрока "<< player1.info.name << ".\n";
     player1.output_stat(player1.info.enemy_ships.size, 1);
-    cout << "\nИнформация полей боя для 2-го игрока.\n";
-    player2.output_stat(player2.info.enemy_ships.size, 16);
+    cout << "Информация полей боя для игрока " << player2.info.name << ".\n";
+    player2.output_stat(player2.info.enemy_ships.size, 15);
 }
 
 void Game::output_info(Player me, Player enemy)
 {
     clearPartOfConsole(0, 15 + me.info.my_ships.size * 2);
-    cout << "Информация полей боя для 1-го игрока.\n";
+    cout << "Информация полей боя для игрока " << me.info.name << ".\n";
     me.info.my_ships.display(true, me.info.enemy_ships);
     me.output_stat(me.info.enemy_ships.size, 3 + me.info.my_ships.size * 2);
 }
 
-void Game::process_steps(Player& me, Player& enemy, bool computer)
+void Game::process_steps(Player& me, Player& enemy, bool person, bool only_comp)
 {
-    if (!computer) // ДЛЯ ИГРОКА
+    if (person) // ДЛЯ ИГРОКА
     {
         enemy.result_of_step.result_shot.rezult_of_shot = 1;
         enemy.result_of_step.in_a_row = false;
@@ -316,9 +321,22 @@ void Game::process_steps(Player& me, Player& enemy, bool computer)
         enemy.result_of_step.result_shot.rezult_of_shot = 1;
         enemy.result_of_step.in_a_row = false;
 
+        if (only_comp)
+        {
+            output_info(me, enemy);
+        }
+
         me.Attack_computer(&enemy);
-        enemy.info.my_ships.display(true, enemy.info.enemy_ships);
+        if (only_comp)
+        {
+            output_info(me, enemy);
+        }
+        else
+        {
+            enemy.info.my_ships.display(true, enemy.info.enemy_ships);
+        }
+
         save_log(me, true);
-        //Sleep(1000);
+        Sleep(1000);
     }
 }

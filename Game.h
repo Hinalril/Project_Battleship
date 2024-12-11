@@ -25,8 +25,8 @@ public:
 	int game_enter();		    // инициализация игры (установка размера поля)
 	vector<ShipType> calculate_ships(int fieldSize, int& remember_ship_sells);     // инициализация игры (количество кораблей)
 	int info_players(Player player1, Player player2);	    // хранение информации об игрока (кто играет, очередность)
-	void cycle_play(Player& player1, Player& player2, bool computer);		    // запуск игрового цилк (повтор ходов)
-	void process_steps(Player& player1, Player& player2, bool computer);	    // обработка ходов игроков
+	void cycle_play(Player& player1, Player& player2, bool computer1, bool computer2);		    // запуск игрового цилк (повтор ходов)
+	void process_steps(Player& player1, Player& player2, bool computer, bool only_comp);	    // обработка ходов игроков
 	void output_info(Player player1, Player player2);		    // вывод информации игрокам о ходе игры
 	bool check_status(Player player1, Player player2);	    // проверка состояния игры
 	void game_end(Player player1, Player player2);		    // завершение игры
