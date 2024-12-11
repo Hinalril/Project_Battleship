@@ -65,6 +65,11 @@ void Player::SetCursor(int x, int y) //функция для того чтобы устанавливать пози
 
 void Player::AutoBoardShipPlacement(string name, Player& another_player)
 {
+    int sum = 0;
+    for (int i = 0; i < info.name.size(); i++)
+    {
+        sum += info.name[i];
+    }
     srand(time(NULL));
     pair<int, int> new_data;
     for (int i = statistic.stat_alive_enemy_ships.size() - 1; i >= 0; i--)

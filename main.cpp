@@ -104,6 +104,7 @@ void game_pusk(bool person1, bool person2)
     if (automat_1) player1.AutoBoardShipPlacement(name_1, player2);
     else player1.BoardShipPlacement(name_1, player2);
 
+    Sleep(1000); // нужно, чтобы srand(time(NULL)) не выдавало те же случайные числа
     if (automat_2) player2.AutoBoardShipPlacement(name_2, player1);
     else player2.BoardShipPlacement(name_2, player1);
 
