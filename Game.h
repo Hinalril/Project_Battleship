@@ -9,112 +9,13 @@ using namespace std;
 
 class Game
 {
-	void clearPartOfConsole(int startLine, int endLine)
-	{
-		// Переместить курсор к начальной строке
-		cout << "\033[" << startLine << ";0H";
-
-		// Очистить каждую строку в указанном диапазоне
-		for (int i = startLine; i <= endLine; ++i) {
-			cout << "\033[K"; // Очистить текущую строку
-			if (i != endLine) {
-				cout << "\033[E"; // Перейти на следующую строку
-			}
-		}
-
-		// Вернуть курсор к первой очищенной строке
-		cout << "\033[" << startLine << ";0H";
-	}
-
-	void scroll_log(int lines)
-	{
-		for (int i = 19; i >= lines; i--)
-		{
-			log[i] = log[i - lines];
-		}
-	};
-
-	void displayLog(int x, int y)
-	{
-		for (int i = 0; i < 20; i++)
-		{
-			SetCursor(x, y + i);
-			cout << log[i];
-		}
-	};
-
-    void save_log(Player me, bool computer)
-    {
-        if (!computer)
-        {
-            if (me.result_of_step.result_shot.rezult_of_shot == 0)
-            {
-                scroll_log(3);
-                log[0] = "+---------------------------------------+\n";
-                log[1] = "| Промах. Ход переходит другому игроку! |\n";
-                log[2] = "+---------------------------------------+\n";
-                displayLog(45, me.info.my_ships.size * 2 - 1 + 15 + 3);
-            }
-            else if (me.result_of_step.result_shot.rezult_of_shot == 1)
-            {
-                if (me.result_of_step.result_shot.ship_dead == true)
-                {
-                    scroll_log(4);
-                    log[0] = "+---------------------------------------+\n";
-                    log[1] = "| Попадание! Ходите ещё раз.            |\n";
-                    log[2] = "| Корабль уничтожен!                    |\n";
-                    log[3] = "+---------------------------------------+\n";
-                    displayLog(45, me.info.my_ships.size * 2 - 1 + 15 + 3);
-                }
-                else
-                {
-                    scroll_log(3);
-                    log[0] = "+---------------------------------------+\n";
-                    log[1] = "| Попадание! Ходите ещё раз.            |\n";
-                    log[2] = "+---------------------------------------+\n";
-                    displayLog(45, me.info.my_ships.size * 2 - 1 + 15 + 3);
-                }
-            }
-            else if (me.result_of_step.result_shot.rezult_of_shot == -1)
-            {
-                scroll_log(4);
-                log[0] = "+---------------------------------------+\n";
-                log[1] = "| Вы уже стреляли в эту клетку.         |\n";
-                log[2] = "| Стреляйте ещё раз!                    |\n";
-                log[3] = "+---------------------------------------+\n";
-                displayLog(45, me.info.my_ships.size * 2 - 1 + 15 + 3);
-            }
-        }
-        else
-        {
-            if (me.result_of_step.result_shot.rezult_of_shot == 0)
-            {
-                scroll_log(3);
-                log[0] = "+---------------------------------------+\n";
-                log[1] = "| Компьютер атакует (" + to_string(me.coords.X) + ", " + to_string(me.coords.Y) + ") - промах.    |\n";
-                log[2] = "+---------------------------------------+\n";
-                displayLog(45, me.info.my_ships.size * 2 - 1 + 15 + 3);
-            }
-            else if (me.result_of_step.result_shot.rezult_of_shot == 1)
-            {
-                scroll_log(3);
-                log[0] = "+---------------------------------------+\n";
-                log[1] = "| Компьютер атакует (" + to_string(me.coords.X) + ", " + to_string(me.coords.Y) + ") - попадание! |\n";
-                log[2] = "+---------------------------------------+\n";
-                displayLog(45, me.info.my_ships.size * 2 - 1 + 15 + 3);
-            }
-        }
-    }
-
-
-	void SetCursor(int x, int y) //функция для того чтобы устанавливать позицию курсора в консоли по оси Х и Y
-	{
-		COORD myCoords = { x,y }; //инициализация координат
-		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), myCoords); //Способ перемещения курсора на нужные координаты
-	}
+    void clearPartOfConsole(int startLine, int endLine);
+    void scroll_log(int lines);
+    void displayLog(int x, int y);
+    void save_log(Player me, bool computer);
+	void SetCursor(int x, int y); //функция для того чтобы устанавливать позицию курсора в консоли по оси Х и Y
 
 public:
-
 	string log[20];
 	string player_name_1;
 	string player_name_2;
