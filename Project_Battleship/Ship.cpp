@@ -1,24 +1,29 @@
 
 #include "Ship.h"
 
-
 // Конструктор
-Ship::Ship(string name, int size, pair<int, int> start, bool is_vertical) : name(name), size(size), is_vertical(is_vertical), hits(0)
+Ship::Ship(string name, int size, COORD start, bool is_vertical) : name(name), size(size), is_vertical(is_vertical), hits(0)
 {
     // Рассчитываем координаты корабля
     for (int i = 0; i < size; i++)
     {
         status_coordinates.push_back(true);
+        COORD coord;
         if (!is_vertical)
         {
-            coordinates.emplace_back(start.first + i, start.second);
+            coord.X = start.X + i;
+            coord.Y = start.Y;
         }
         else
         {
-            coordinates.emplace_back(start.first, start.second + i);
+            coord.X = start.X;
+            coord.Y = start.Y + i;
         }
+        coordinates.push_back(coord);
     }
 }
+
+Ship::Ship() : name(""), size(0), is_vertical(false), hits(0) {}
 
 // Проверка, потоплен ли корабль
 bool Ship::isSunk() const
@@ -32,10 +37,10 @@ bool Ship::takeHit(int x, int y)
     int counter = 0;
     for (const auto& coord : coordinates)
     {
-        if (coord.first == x && coord.second == y)
+        if (coord.X == x && coord.Y == y)
         {
-            status_coordinates[counter] = false;
-            ++hits;
+            status_coordinates[counter] = false; // false - клетка корабля подбита
+            hits++;
             return true;
         }
         counter++;
@@ -46,7 +51,7 @@ bool Ship::takeHit(int x, int y)
 int Ship::statusShip() const
 {
     int counter_damage = 0;
-    for (vector<bool>::size_type i = 0; i < (status_coordinates.size()); i++)
+    for (int i = 0; i < (status_coordinates.size()); i++)
     {
         if (status_coordinates[i] == false)
         {

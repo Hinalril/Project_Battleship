@@ -1,3 +1,44 @@
-﻿  main.cpp
-C:\Users\user\source\repos\Project_Battleship\Project_Battleship\main.cpp(85,20): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+﻿  Board.cpp
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Board.cpp(581,24): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Board.cpp(581,26): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+  Game.cpp
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Game.cpp(111,24): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Game.cpp(111,26): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Game.cpp(145,20): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Game.cpp(201,20): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+  Player.cpp
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(87,24): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(87,26): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(98,15): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(99,16): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(107,32): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(107,35): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(127,16): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(515,51): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(515,64): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(523,51): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(523,65): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(531,45): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(531,54): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(539,45): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(539,54): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(550,43): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(550,48): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(555,43): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(555,48): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(560,41): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(560,46): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(565,41): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(565,46): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(715,32): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(715,45): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(729,24): warning C4244: инициализация: преобразование "int" в "float", возможна потеря данных
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Player.cpp(735,24): warning C4244: инициализация: преобразование "int" в "float", возможна потеря данных
+  Ship.cpp
+  main.cpp
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\main.cpp(16,24): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\main.cpp(16,26): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\main.cpp(39,26): warning C4838: Преобразование из "int" в "SHORT" требует сужающего преобразования.
+  Создание кода...
+C:\Users\user\source\repos\Project_Battleship\Project_Battleship\Board.cpp(105,1): warning C4715: Board::processShot: значение возвращается не при всех путях выполнения
   Project_Battleship.vcxproj -> C:\Users\user\source\repos\Project_Battleship\x64\Debug\Project_Battleship.exe

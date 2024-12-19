@@ -1,225 +1,162 @@
-﻿/*
-Рекомендации по количеству кораблей в зависимости от размера поля:
-Поле 6x6 (36 клеток)
-1 четырёхпалубный (Battleship).
-1 трёхпалубный (Cruiser).
-2 двухпалубных (Destroyer).
-3 однопалубных (Submarine).
-Итого: 7 кораблей, занимают 20 клеток (≈55% свободного пространства).
-
-Поле 8x8 (64 клетки)
-1 четырёхпалубный (Battleship).
-2 трёхпалубных (Cruiser).
-3 двухпалубных (Destroyer).
-4 однопалубных (Submarine).
-Итого: 10 кораблей, занимают 25 клеток (≈60% свободного пространства).
-
-Поле 10x10 (100 клеток) — классическое поле
-1 четырёхпалубный (Battleship).
-2 трёхпалубных (Cruiser).
-3 двухпалубных (Destroyer).
-4 однопалубных (Submarine).
-Итого: 10 кораблей, занимают 25 клеток (25% клеток — оптимально).
-
-Поле 12x12 (144 клетки)
-2 четырёхпалубных (Battleship).
-3 трёхпалубных (Cruiser).
-4 двухпалубных (Destroyer).
-6 однопалубных (Submarine).
-Итого: 15 кораблей, занимают 40 клеток (≈28% клеток).
-
-Поле 15x15 (225 клеток)
-2 четырёхпалубных (Battleship).
-4 трёхпалубных (Cruiser).
-5 двухпалубных (Destroyer).
-7 однопалубных (Submarine).
-Итого: 18 кораблей, занимают 55 клеток (≈24% клеток).
-*/
-
-
-#include <iostream>
+﻿#include <iostream>
 #include <Windows.h>
-#include <fstream>
-#include <vector>
-#include <algorithm>
+#include <conio.h>
 #include "Board.h"
 #include "Ship.h"
+#include "Player.h"
+#include "Game.h"
 
-void print_pic(string file) { // рисует картинки из файлов
-    ifstream fin(file);
-    string temp;
-    while (!fin.eof()) {
-        fin >> temp;
-        cout << temp << endl;
-    }
-    fin.close();
+void playMenuSwitchSound()
+{
+    Beep(750, 80); // Короткий высокий звук
 }
 
-struct ShipType
+void SetCursor(int x, int y) //функция для того чтобы устанавливать позицию курсора в консоли по оси Х и Y
 {
-    string name;
-    int size;
-    int count;
-};
+    COORD myCoords = { x,y }; //инициализация координат
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), myCoords); //Способ перемещения курсора на нужные координаты
+}
 
-vector<ShipType> calculateShips(int fieldSize)
+void setColorWithBackground(int textColor, int backgroundColor)
 {
-    int totalCells = fieldSize * fieldSize;        // Общее количество клеток
-    int shipCells = static_cast<int>(totalCells * 0.2); // Клетки для кораблей
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    int color = (backgroundColor << 4) | textColor;
+    SetConsoleTextAttribute(hConsole, color);
+}
 
-    // Инициализация кораблей
-    vector<ShipType> ships =
+//enum Color { Black = 0, DarkBlue = 1, Green = 2, Blue = 3, Red = 4, Purple = 5, Yellow = 6, White = 7, Grey = 8, LightBlue = 9, LightGreen = 10 };
+enum Napravlenie { Up = 72, Left = 75, Right = 77, Down = 80, Enter = 13, Tab = 9 };
+
+void setMenuOption(const COORD& coord, int rem_y, int current_y, const string& text)
+{
+    SetCursor(coord.X, current_y);
+    setColorWithBackground((rem_y == current_y) ? 0 : 7, (rem_y == current_y) ? 7 : 0); // rem_y == current_y - если выполнено, то подсвеченный текст, т.е. (0,7)
+    cout << text << "\n"; // вывод самого текста
+}
+
+int navigateMenu(const vector<string>& options, int start_y, int skip)
+{
+    COORD menu_coord{ 5, start_y };
+    int rem_y = start_y + skip;
+    int key;
+
+    do
     {
-        {"Battleship", 4, 0},  // 4-палубный
-        {"Cruiser", 3, 0},     // 3-палубный
-        {"Destroyer", 2, 0},   // 2-палубный
-        {"Submarine", 1, 0}    // 1-палубный
-    };
-
-    // Основной цикл распределения
-    while (shipCells > 0)
-    {
-        bool added = false;
-
-        // Начинаем распределение с однопалубных
-        for (int i = ships.size() - 1; i >= 0; --i)
+        system("cls");
+        for (int i = 0; i < options.size(); i++)
         {
-            // Проверяем, достаточно ли клеток для нового корабля
-            if (shipCells >= ships[i].size)
-            {
-                // Проверяем строгую пропорцию
-                if (i == ships.size() - 1 || ships[i].count < ships[i + 1].count - 1)
-                {
-                    ships[i].count++;          // Увеличиваем количество текущего корабля
-                    shipCells -= ships[i].size; // Уменьшаем оставшиеся клетки
-                    added = true;
-                }
-            }
+            setMenuOption(menu_coord, rem_y, start_y + i, options[i]);  // вывод меню построчно, т.е. построчно вывод vector
         }
+        setColorWithBackground(7, 0); // перекрасим в стандартный цвет
 
-        // Если ни один корабль не был добавлен, выходим из цикла
-        if (!added)
-            break;
-    }
+        key = _getch(); // ожидаем нажатие клавиши
+        if (key == Up && rem_y > start_y + skip) { playMenuSwitchSound(); rem_y--; }// вверх
+        if (key == Down && rem_y < start_y + options.size() - 1) { playMenuSwitchSound(); rem_y++; }// вниз
+    } while (key != Enter);
 
-    return ships;
+    return rem_y - start_y;
 }
 
+bool yesno(const string& name)
+{
+    vector<string> options =
+    {
+        name + ", включить автоматическое расставление?",
+        "Да.",
+        "Нет, не доверяю компьютеру."
+    };
+    return (navigateMenu(options, 4, 1) == 1); // Если да, то true. Если нет, то false
+}
 
+void game_pusk(bool person1, bool person2)
+{
+    system("cls");
+
+    string name_1, name_2;
+    if (person1) { cout << "Введите имя первого игрока: "; getline(cin, name_1); }
+    else { name_1 = "Автобот №1"; }
+    if (person2) { cout << "Введите имя второго игрока: "; getline(cin, name_2); }
+    else { name_2 = "Автобот №2"; }
+
+    Game my_game(name_1, name_2);
+    int fieldSize = my_game.game_enter();
+
+    Board board1(fieldSize), board2(fieldSize);
+    int remember_ship_sells;
+    vector<ShipType> ships = my_game.calculate_ships(fieldSize, remember_ship_sells);
+
+    Player player1(name_1, board1, board2, ships, remember_ship_sells, person1, "Player 1");
+    Player player2(name_2, board2, board1, ships, remember_ship_sells, person2, "Player 2");
+
+    if (person1 && person2) { player1.coords.X = 7; }
+
+    bool automat_1 = true, automat_2 = true;
+    if (person1) automat_1 = yesno(name_1);
+    if (person2) automat_2 = yesno(name_2);
+
+    if (automat_1) player1.AutoBoardShipPlacement(name_1, player2);
+    else player1.BoardShipPlacement(name_1, player2);
+
+    Sleep(1000); // нужно, чтобы srand(time(NULL)) не выдавало те же случайные числа
+    if (automat_2) player2.AutoBoardShipPlacement(name_2, player1);
+    else player2.BoardShipPlacement(name_2, player1);
+
+    my_game.cycle_play(player1, player2, person1, person2);
+}
 
 int main()
 {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
-    vector<Ship> ships;
+    vector<string> mainMenu =
+    {
+        "Запустить игру.",
+        "Об игре.",
+        "Выход из игры."
+    };
 
-    // Варианты команд предусмотренные программой
-    string play[] = {"новая игра", "Новая игра", "играть", "Играть", "начать", "Начать", "play",
-    "new game", "Play", "New game", "Start", "start"};
-    string continu[] = { "Загрузить игру", "Продолжить игру", "загрузить игру", "продолжить игру",
-    "загрузить", "Загрузить", "Продолжить", "продолжить", "continue", "Continue"};
-    string exit[] = { "Выйти", "выйти", "выход", "Выход", "Выйти из игры", "выйти из игры",
-    "exit", "Exit"};
+    vector<string> gameModes =
+    {
+        "Выберете режим игры.",
+        "Игрок против игрока.",
+        "Игрок против компьютера.",
+        "Компьютер против компьютера.",
+        "Назад."
+    };
 
-    string answer; // Ответ пользователя
+    while (true)
+    {
+        int choice = navigateMenu(mainMenu, 4, 0);
 
-    while (true) { // Цикл главно меню
-
-        print_pic("images/main_menu.txt"); // Красивая картинка меню
-        cout << endl << "          Начать игру" << endl;
-        cout << "          Загрузить игру" << endl;
-        cout << "          Выйти" << endl;
-        cout << endl << ">> "; // выбор между вариантами
-        getline(cin, answer);
-        system("cls");
-
-        if (find(play, play + 12, answer) != (play + 12)) { // Игрок решил начать игру
-
-            int fieldSize;
-            cout << "Введите размер поля: ";
-            cin >> fieldSize;
-
-            Board board(fieldSize);
-
-            // Расчёт кораблей
-            vector<ShipType> ships_ = calculateShips(fieldSize);
-
-            cout << "Рекомендуемое количество кораблей для поля " << fieldSize << "x" << fieldSize << ":\n";
-            for (const auto& ship : ships_)
+        if (choice == 0) // Запустить игру
+        {
+            while (true)
             {
-                cout << ship.name << " (размер " << ship.size << "): " << ship.count << "\n";
+                int mode = navigateMenu(gameModes, 4, 1) - 1;
+                if (mode == 0) game_pusk(true, true);
+                else if (mode == 1) game_pusk(true, false);
+                else if (mode == 2) game_pusk(false, false);
+                else break; // Назад
             }
-
-            /*
-                Четырёхпалубный — Battleship.
-                Трёхпалубный — Cruiser.
-                Двухпалубный — Destroyer.
-                Однопалубный — Submarine.
-            */
-
-            // расположение кораблей
-            for (int i = 0; i < ships_.size(); i++)
-            {
-                for (int j = 0; j < ships_[i].count; j++)
-                {
-                    int x, y;
-                    bool vertical;
-
-                    cout << "Расположите " << ships_[i].name << " (размер " << ships_[i].size << "):\n";
-                    cout << "Координаты x, y: ";
-                    cin >> x >> y;
-                    x--;
-                    y--;
-                    if (ships_[i].name != "Submarine")
-                    {
-                        cout << "Расположить вертикально? (0/1): ";
-                        cin >> vertical;
-                    }
-                    else
-                    {
-                        vertical = true;
-                    }
-
-                    pair<int, int> new_data(x, y);
-                    Ship new_ship(ships_[i].name, ships_[i].size, new_data, vertical);
-
-                    if (board.can_place_ship(new_ship))
-                    {
-                        board.placeShip(new_ship);
-                        ships.push_back(new_ship); // Добавляем корабль в список
-                    }
-                    else
-                    {
-                        cout << "Невозможно разместить корабль в данной позиции. Попробуйте снова.\n";
-                        j--; // Повторим попытку размещения для этого корабля
-                    }
-
-                    board.display();
-                }
-            }
-
-            // Выстрелы
-            board.processShot(2, 2); // Попадание
-            board.display();
-            board.processShot(5, 6); // Промах
-            board.display();
-            board.processShot(0, 0); // Попадание (1/2)
-            board.display();
-            board.processShot(0, 1); // Попадание (2/2)
-            board.display();
-            board.processShot(2, 3); // Попадание (2/3)
-            board.display();
-            board.processShot(2, 4); // Попадание (3/3)
-
-            // Отображение после выстрелов
-            board.display();
-
-        } 
-        else if (find(play, play + 12, answer) != (play + 12)) { // Игрок решил продолжить игру
-
-        } else if (find(play, play + 12, answer) != (play + 12)) { // Игрок решил выйти
+        }
+        else if (choice == 1) // Об игре
+        {
+            system("cls");
+            cout << "Об игре. Приложение - игра морской бой. Реализована в рамках лабораторной работы №7 как проектная работа.\n";
+            cout << "В игре представлены разные режимы игры:\n1. игрок против игрока\n2. игрок против компьютера\n3. компьютер против компьютера\n\n";
+            cout << "Авторы: группа ИМ23-02Б\n";
+            cout << "1. Ефремов Илья Валентинович\n";
+            cout << "2. Медведев Вадим Дмитриевич\n";
+            cout << "3. Литвинова Анастасия Романовна\n\n";
+            cout << "Дата создания: 28.11.24 - 16.12.24\n";
+            system("pause");
+        }
+        else if (choice == 2)  // Выход из игры
+        {
             break;
         }
     }
+
+    return 0;
 }
